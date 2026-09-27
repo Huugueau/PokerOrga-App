@@ -584,7 +584,8 @@ Front : `/club` (adhérents, demandes, paramètres), `/club/cards` (planche de c
 Tests unitaires 17/17 ; test de bout en bout de l'API **29/29** (dont club, pointage QR, Multi SnG, barème SnG) ; `tsc` sans erreur ; parcours visuels : palette, Mon club, fiche adhérent + QR, sessions SnG, outils publics.
 
 ### 13.4 Reste à faire
-- Compte joueur (identité persistante multi-événements) : remplacé ici par le lien personnel de préinscription et la carte membre.
+- Emails transactionnels (confirmation, mot de passe oublié) : aucun serveur SMTP configuré.
+- Tests E2E navigateur automatisés (Playwright).
 
 ### 13.5 Horloge liée (tournois simultanés)
 `tournaments.clock_group_id` regroupe des lives partageant timer et structure. Création via `POST /api/tournaments { linkTo }` (copie structure + horloge), séparation via `POST /api/tournaments/:id/unlink` (le live garde son état). Toute mutation qui modifie `clock` ou `structure` est reportée dans la même transaction sur les autres lives du groupe, qui sont notifiés en SSE ; le premier « play » fait passer tous les lives liés en cours et exige 2 joueurs actifs dans chacun. Réinitialiser ou terminer un live le détache. Incompatible avec une session Multi Sit-and-Go. Interface : bouton « Tournoi simultané (horloge liée) » dans Mes lives, mention sous le titre du timer, bloc « Horloge liée / Séparer » dans les Réglages. Test de bout en bout : 34/34.
@@ -595,3 +596,10 @@ Tables : `flight_series` (dossier : nom, % de qualifiés indicatif, tapis des Da
 Déroulé : un dossier démarre avec Day 1A → Day 2 ; on ajoute des jours (Day 1B, étage 3…). Lancer un jour crée son live ; un jour d'étage 2+ n'est lançable que lorsque tous les jours qui l'alimentent sont clôturés, et importe alors les qualifiés avec leur tapis. Clôturer un jour impose la saisie du tapis de chaque joueur encore en jeu (aide « Répartir le reste », contrôle de l'écart avec le total théorique), crée les qualifiés et archive le live. Classement global : qualifiés en attente, puis finale, puis éliminés du plus tardif au plus précoce. Export CSV et export championnat (points calculés sur le total des entrées Day 1).
 
 API `/api/flights/*` : liste, création, détail (jours, qualifiés, classement), ajout / modification / suppression de jour, lancement, clôture d'un jour, clôture et suppression du dossier, `recap.csv`, export championnat. Interface : `/flights` et `/flights/:id` (colonnes par étage, cartes de jour, modale de clôture avec saisie des tapis). Test de bout en bout : **38/38**.
+
+### 13.7 Compte joueur
+Table `player_accounts` (email unique, mot de passe bcrypt, pseudo, prénom, nom, QR personnel `P…` régénérable), session dans un cookie distinct `po_player` (90 jours) : un même navigateur peut être organisateur et joueur. `registrations.player_account_id`, `players.player_account_id` et `club_members.player_account_id` rattachent le compte à ses préinscriptions, à ses lives et à sa fiche adhérent.
+
+API `/api/player/*` : inscription, connexion, déconnexion, profil, régénération du QR, « Mes tournois » (préinscriptions + résultats des tournois terminés), annulation d'une préinscription. Une préinscription publique faite en étant connecté est rattachée au compte (un seul enregistrement par événement). Pointage : le QR `P…` est reconnu comme carte membre si la fiche est liée, sinon comme préinscription chez cet organisateur, sinon le joueur est ajouté sur demande. Fiche adhérent : liaison / déliaison à un compte par email.
+
+Front : `/joueur` (connexion / création), `/joueur/espace` (QR, profil, mes tournois, mes résultats) ; la page d'inscription publique pré-remplit le formulaire du joueur connecté. Test de bout en bout : **42/42**.

@@ -26,6 +26,7 @@ import { AuthPage } from './pages/AuthPages';
 import { ChampionshipDetailPage, ChampionshipsPage } from './pages/ChampionshipPages';
 import { ClubCardsPage, ClubPage } from './pages/ClubPages';
 import { FlightDetailPage, FlightsPage } from './pages/FlightPages';
+import { PlayerAuthPage, PlayerSpacePage } from './pages/PlayerPages';
 import { HistoryDetailPage, HistoryPage } from './pages/HistoryPages';
 import { CurrentLiveRedirect, LivesPage } from './pages/LivesPage';
 import { EventDetailPage, PlanningPage } from './pages/PlanningPages';
@@ -55,6 +56,8 @@ createRoot(document.getElementById('root')!).render(
               <Route path="/p/ranking/:token" element={<PublicRankingPage />} />
               <Route path="/p/register/:token" element={<PublicRegisterPage />} />
               <Route path="/p/club/:token" element={<PublicClubPage />} />
+              <Route path="/joueur" element={<PlayerAuthPage />} />
+              <Route path="/joueur/espace" element={<PlayerSpacePage />} />
               <Route path="/p/inscription/:code" element={<MyRegistrationPage />} />
               <Route path="/outils" element={<Navigate to="/outils/structure" replace />} />
               <Route path="/outils/structure" element={<StructureToolPage />} />

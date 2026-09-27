@@ -58,4 +58,22 @@ if (!club.club) {
     if (pseudo !== 'Gus') await call('POST', `/club/members/${m.id}/payments`, { seasonId: seasons[0].id, kind: 'dues', amount: 20, paidOn: '2026-09-20' });
   }
 }
+// Compte joueur de démo (cookie distinct) : demo-joueur@pokerorga.test / demo1234
+{
+  const res = await fetch(BASE + '/api/player/register', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ email: 'demo-joueur@pokerorga.test', password: PASSWORD, pseudo: 'Joueur Démo' }),
+  });
+  let pc = res.headers.get('set-cookie')?.split(';')[0];
+  if (!res.ok) {
+    const login = await fetch(BASE + '/api/player/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email: 'demo-joueur@pokerorga.test', password: PASSWORD }) });
+    pc = login.headers.get('set-cookie')?.split(';')[0];
+  }
+  const evs = await call('GET', '/events');
+  const open = evs.items.find((e) => e.status === 'open');
+  if (open && pc) {
+    await fetch(BASE + `/api/public/events/${open.publicToken}/register`, { method: 'POST', headers: { 'content-type': 'application/json', cookie: pc }, body: JSON.stringify({ pseudo: 'Joueur Démo', answers: Object.fromEntries(open.options.map((o) => [o.id, 'yes'])) }) });
+  }
+}
 console.log('Démo prête.');

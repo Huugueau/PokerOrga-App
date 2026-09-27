@@ -4,6 +4,7 @@ import { CalendarDays, Expand, LayoutGrid, List, MapPin, Pause, Play, Printer, T
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { QrCode } from '../components/QrCode';
+import { usePlayer } from './PlayerPages';
 import { cx, Empty, fmtDate, Loading, Modal } from '../components/ui';
 import { api, ApiError, assetUrl } from '../lib/api';
 import { PlayerDetail, RankingList, type Detail, type RankRow } from './ChampionshipPages';
@@ -213,7 +214,11 @@ interface PublicEvent {
 export function PublicRegisterPage() {
   const { token } = useParams();
   const q = useQuery({ queryKey: ['pub-event', token], queryFn: () => api.get<PublicEvent>(`/public/events/${token}`), retry: false });
+  const player = usePlayer();
   const [f, setF] = useState({ pseudo: '', firstName: '', lastName: '', email: '' });
+  useEffect(() => {
+    if (player.data) setF((x) => ({ ...x, pseudo: x.pseudo || player.data!.pseudo, firstName: x.firstName || (player.data!.firstName ?? ''), lastName: x.lastName || (player.data!.lastName ?? ''), email: x.email || player.data!.email }));
+  }, [player.data]);
   const [answers, setAnswers] = useState<Record<string, 'yes' | 'no' | 'unknown'>>({});
   const [err, setErr] = useState<string | null>(null);
   const [done, setDone] = useState<string | null>(null);
@@ -295,6 +300,17 @@ export function PublicRegisterPage() {
           ) : (
             <form onSubmit={submit} className="space-y-4">
               <h2 className="text-lg font-bold">S'inscrire</h2>
+              {player.data ? (
+                <p className="rounded-lg bg-accent-500/10 px-3 py-2 text-sm text-accent-300">Connecté en tant que {player.data.pseudo} : l'inscription apparaîtra dans « Mes tournois » et votre QR personnel servira au pointage.</p>
+              ) : (
+                <p className="text-sm text-zinc-400">
+                  Vous avez un compte joueur ?{' '}
+                  <a className="text-accent-400 underline" href={`/joueur?next=${encodeURIComponent(location.pathname)}`}>
+                    Se connecter
+                  </a>{' '}
+                  (facultatif)
+                </p>
+              )}
               {full && <p className="rounded-lg bg-amber-500/10 p-3 text-sm text-amber-200">Complet : votre inscription sera placée en liste d'attente.</p>}
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="sm:col-span-2">

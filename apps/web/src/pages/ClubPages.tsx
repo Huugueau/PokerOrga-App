@@ -67,6 +67,7 @@ export interface Member {
   membershipType: MType;
   roleIds: string[];
   code: string;
+  playerAccountId: string | null;
   createdAt: string;
   membership: { exempt: boolean; duesExpected: number } | null;
   payments: Payment[];
@@ -654,6 +655,7 @@ function MemberModal({ club, season, member, onClose }: { club: Club; season: Se
               Régénérer le QR
             </button>
             <p className="text-xs text-zinc-500">{member.tournaments} tournoi(s) joué(s) · membre depuis le {fmtDate(member.createdAt)}</p>
+            <PlayerLink member={member} onDone={onClose} />
           </div>
         )}
       </div>
@@ -941,6 +943,41 @@ export function ClubCardsPage() {
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+/** Liaison d'une fiche adhérent à un compte joueur (le QR du compte fonctionne alors comme la carte). */
+function PlayerLink({ member, onDone }: { member: Member; onDone: () => void }) {
+  const toast = useToast();
+  const [email, setEmail] = useState('');
+  const send = async (playerEmail: string | null) => {
+    try {
+      await api.patch(`/club/members/${member.id}`, { playerEmail });
+      toast(playerEmail ? 'Fiche liée au compte joueur.' : 'Liaison retirée.');
+      onDone();
+    } catch (e) {
+      toast(e instanceof ApiError ? e.message : 'Erreur', 'error');
+    }
+  };
+  return (
+    <div className="w-full border-t border-white/10 pt-3 text-left">
+      <p className="eyebrow mb-1">Compte joueur</p>
+      {member.playerAccountId ? (
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-accent-300">Compte lié</span>
+          <button className="text-zinc-400 hover:text-red-300" onClick={() => send(null)}>
+            Délier
+          </button>
+        </div>
+      ) : (
+        <div className="flex gap-1.5">
+          <input className="input !py-1.5 text-xs" placeholder="Email du compte" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <button className="btn-ghost btn-sm" disabled={!email.includes('@')} onClick={() => send(email)}>
+            Lier
+          </button>
+        </div>
+      )}
     </div>
   );
 }

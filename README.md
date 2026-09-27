@@ -1,6 +1,6 @@
 # PokerOrga
 
-Outil auto-hébergé d'organisation de tournois de poker : timer synchronisé multi-écrans (PC, TV, téléphone), gestion des joueurs et des tables, structures, places payées, sessions Multi Sit-and-Go, championnats, planning avec inscriptions en ligne et pointage QR, module « Mon club » (adhérents, cotisations, cartes membres), outils publics (générateur de structure, calculateur de payout).
+Outil auto-hébergé d'organisation de tournois de poker : timer synchronisé multi-écrans (PC, TV, téléphone), gestion des joueurs et des tables, structures, places payées, sessions Multi Sit-and-Go, championnats, planning avec inscriptions en ligne et pointage QR, tournois flights multi-jours, horloge liée entre lives, module « Mon club » (adhérents, cotisations, cartes membres), compte joueur avec QR personnel, outils publics (générateur de structure, calculateur de payout).
 
 - Documentation fonctionnelle : [docs/01-ANALYSE-FONCTIONNELLE.md](docs/01-ANALYSE-FONCTIONNELLE.md)
 - Plan & spécifications techniques (document principal) : [docs/00-PLAN-ET-SPECS-TECHNIQUES.md](docs/00-PLAN-ET-SPECS-TECHNIQUES.md)
@@ -35,7 +35,7 @@ npm run dev:db     # PostgreSQL embarqué (sans Docker) sur :5432 — ou : docke
 npm run dev        # API :3000 + front Vite :5173 (proxy /api)
 ```
 
-Données de démo (compte `demo@pokerorga.test`, voir `scripts/seed-demo.mjs`) :
+Données de démo (compte organisateur `demo@pokerorga.test`, compte joueur `demo-joueur@pokerorga.test`, voir `scripts/seed-demo.mjs`) :
 
 ```bash
 node scripts/seed-demo.mjs

@@ -98,7 +98,7 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
           )}
         </p>
         <p className="mt-3 text-center text-xs text-zinc-500">
-          Outils gratuits sans compte : <Link to="/outils/structure" className="text-zinc-300 underline">générateur de structure</Link> · <Link to="/outils/payout" className="text-zinc-300 underline">calculateur de payout</Link>
+          Vous êtes joueur ? <Link to="/joueur" className="text-zinc-300 underline">Espace joueur</Link> · Outils gratuits : <Link to="/outils/structure" className="text-zinc-300 underline">générateur de structure</Link> · <Link to="/outils/payout" className="text-zinc-300 underline">calculateur de payout</Link>
         </p>
       </div>
     </div>

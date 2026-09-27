@@ -6,7 +6,7 @@ import { api, ApiError } from '../../lib/api';
 import { useLiveAction } from './useLive';
 
 interface CheckinResult {
-  kind: 'member' | 'registration';
+  kind: 'member' | 'registration' | 'player';
   pseudo: string;
   state: 'added' | 'present' | 'already' | 'checked' | 'waitlist' | 'needs-override';
   event?: string;
@@ -133,7 +133,7 @@ export function ScanModal({ tournamentId, onClose }: { tournamentId: string; onC
             <div>
               <p className="font-bold">{result.pseudo}</p>
               <p className="text-sm text-zinc-300">
-                {result.kind === 'member' ? 'Adhérent' : 'Préinscrit'} · {MESSAGES[result.state]}
+                {result.kind === 'member' ? 'Adhérent' : result.kind === 'player' ? 'Compte joueur' : 'Préinscrit'} · {MESSAGES[result.state]}
               </p>
             </div>
           </div>
