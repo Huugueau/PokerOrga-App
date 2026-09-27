@@ -197,4 +197,29 @@ const flChamp = await call('POST', '/championships', { name: 'Flights 2026', typ
 await call('POST', `/flights/${series.id}/export`, { championshipId: flChamp.id });
 const fv = await call('GET', `/championships/${flChamp.id}`);
 assert(fv.ranking.length === 8 && fv.ranking[0].points === Math.round(10 * Math.sqrt(8) * 10) / 10, 'flights : export championnat');
+// Compte joueur (cookie distinct de l'organisateur)
+let pcookie = '';
+async function pcall(method, path, body) {
+  const res = await fetch(BASE + '/api' + path, { method, headers: { ...(body ? { 'content-type': 'application/json' } : {}), cookie: pcookie }, body: body ? JSON.stringify(body) : undefined });
+  const sc = res.headers.get('set-cookie');
+  if (sc) pcookie = sc.split(';')[0];
+  const data = await res.json().catch(() => null);
+  if (!res.ok) throw new Error(`${method} ${path} → ${res.status} ${JSON.stringify(data)}`);
+  return data;
+}
+const pl = await pcall('POST', '/player/register', { email: `joueur${Date.now()}@test.local`, password: 'secret123', pseudo: 'JoueurQR' });
+const ev2 = await call('POST', '/events', { name: 'Tournoi joueurs', capacity: 10 });
+await call('POST', `/events/${ev2.id}/status`, { status: 'open' });
+await pcall('POST', `/public/events/${ev2.publicToken}/register`, { pseudo: 'JoueurQR', answers: {} });
+const mine = await pcall('GET', '/player/me/tournaments');
+assert(mine.registrations.length === 1 && mine.registrations[0].eventName === 'Tournoi joueurs', 'compte joueur : préinscription visible dans « Mes tournois »');
+const { id: pLive } = await call('POST', '/tournaments', { title: 'Live joueurs' });
+const pc = await call('POST', `/tournaments/${pLive}/checkin`, { code: pl.player.qrCode, add: true });
+assert(pc.kind === 'registration' && pc.state === 'added', 'scan QR du compte joueur → préinscription pointée et joueur ajouté');
+const pSnap = await call('GET', `/tournaments/${pLive}/full`);
+assert(pSnap.players.some((p) => p.pseudo === 'JoueurQR' && p.present), 'joueur présent dans le live');
+const m2 = await call('POST', '/club/members', { pseudo: 'JoueurQR-club' });
+await call('PATCH', `/club/members/${m2.id}`, { playerEmail: pl.player.email });
+const pc2 = await call('POST', `/tournaments/${pLive}/checkin`, { code: pl.player.qrCode });
+assert(pc2.kind === 'member', 'compte joueur lié à une fiche adhérent → reconnu comme adhérent');
 console.log('\nTous les tests de fumée sont passés.');

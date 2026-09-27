@@ -198,7 +198,7 @@ export async function eventRoutes(app: FastifyInstance) {
     const res = await mutateTournament(body.tournamentId, uidv, (ctx) =>
       insertPlayers(
         ctx,
-        chosen.map((r) => ({ pseudo: r.pseudo, firstName: r.firstName, lastName: r.lastName, registrationId: r.id, present: r.present })),
+        chosen.map((r) => ({ pseudo: r.pseudo, firstName: r.firstName, lastName: r.lastName, registrationId: r.id, present: r.present, playerAccountId: r.playerAccountId })),
       ),
     );
     await db.update(events).set({ status: 'imported', tournamentId: body.tournamentId }).where(eq(events.id, id));

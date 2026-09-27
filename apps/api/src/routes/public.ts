@@ -7,6 +7,7 @@ import { bad, notFound, parse } from '../lib';
 import { toPlayer, toTournament } from '../services/tournament';
 import { championshipView } from './championships';
 import { countTaken, pseudoInEvent, registrationCode, registrationInput } from './events';
+import { currentPlayer } from './playerAccount';
 import { sse } from './tournaments';
 
 const { tournaments, players, tournamentTables, championships, events, registrations, assets, users, clubs, clubSeasons, clubMembers, clubMemberships, clubRequests } = schema;
@@ -114,11 +115,16 @@ export async function publicRoutes(app: FastifyInstance) {
     if (!e || e.status === 'draft') throw notFound('Page d’inscription introuvable.');
     if (e.status !== 'open') throw bad('Les inscriptions sont closes.');
     for (const o of e.options) if (!body.answers[o.id]) throw bad('Le joueur doit répondre à toutes les options.');
+    const account = await currentPlayer(app, req);
+    if (account) {
+      const [mine] = await db.select({ id: registrations.id }).from(registrations).where(and(eq(registrations.eventId, e.id), eq(registrations.playerAccountId, account.id)));
+      if (mine) throw bad('Vous êtes déjà inscrit à cet événement (voir « Mes tournois »).');
+    }
     if (await pseudoInEvent(e.id, body.pseudo)) throw bad('Ce pseudo est déjà inscrit à cet événement.');
     const full = e.capacity != null && (await countTaken(e.id)) >= e.capacity;
     const [r] = await db
       .insert(registrations)
-      .values({ eventId: e.id, ...body, email: body.email || null, status: full ? 'waitlist' : 'pending', code: registrationCode() })
+      .values({ eventId: e.id, ...body, email: body.email || null, status: full ? 'waitlist' : 'pending', code: registrationCode(), playerAccountId: account?.id ?? null })
       .returning({ status: registrations.status, code: registrations.code });
     let position: number | null = null;
     if (r.status === 'waitlist') {

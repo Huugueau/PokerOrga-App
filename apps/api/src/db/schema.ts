@@ -117,6 +117,7 @@ export const players = pgTable(
     sngGroup: integer('sng_group'),
     /** Tapis de départ spécifique (joueur qualifié d'un jour précédent). */
     startChips: integer('start_chips'),
+    playerAccountId: uuid('player_account_id'),
     createdAt: ts('created_at').notNull().defaultNow(),
   },
   (t) => [
@@ -284,6 +285,7 @@ export const registrations = pgTable(
     status: text('status').$type<'pending' | 'validated' | 'waitlist' | 'refused' | 'cancelled'>().notNull().default('pending'),
     present: boolean('present').notNull().default(false),
     code: text('code').unique(),
+    playerAccountId: uuid('player_account_id'),
     createdAt: ts('created_at').notNull().defaultNow(),
   },
   (t) => [uniqueIndex('registrations_event_pseudo_uq').on(t.eventId, sql`lower(${t.pseudo})`)],
@@ -341,6 +343,7 @@ export const clubMembers = pgTable(
     note: text('note'),
     membershipType: text('membership_type').$type<'live' | 'online' | 'both'>().notNull().default('live'),
     roleIds: jsonb('role_ids').$type<string[]>().notNull().default([]),
+    playerAccountId: uuid('player_account_id'),
     code: text('code').notNull().unique(),
     createdAt: ts('created_at').notNull().defaultNow(),
   },
@@ -437,4 +440,16 @@ export const flightQualifiers = pgTable('flight_qualifiers', {
   lastName: text('last_name'),
   memberId: uuid('member_id'),
   stack: integer('stack').notNull(),
+});
+
+// ---------------- Comptes joueurs ----------------
+export const playerAccounts = pgTable('player_accounts', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  email: text('email').notNull().unique(),
+  passwordHash: text('password_hash').notNull(),
+  pseudo: text('pseudo').notNull(),
+  firstName: text('first_name'),
+  lastName: text('last_name'),
+  qrCode: text('qr_code').notNull().unique(),
+  createdAt: ts('created_at').notNull().defaultNow(),
 });

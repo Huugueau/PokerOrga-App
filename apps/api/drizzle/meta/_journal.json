@@ -43,6 +43,13 @@
       "when": 1790496247587,
       "tag": "0005_flights",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790496580366,
+      "tag": "0006_player_accounts",
+      "breakpoints": true
     }
   ]
 }

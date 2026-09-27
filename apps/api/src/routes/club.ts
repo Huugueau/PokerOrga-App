@@ -207,11 +207,21 @@ export async function clubRoutes(app: FastifyInstance) {
 
   app.patch('/club/members/:id', async (req) => {
     const { id } = parse(idParam, req.params);
-    const body = parse(memberInput.partial(), req.body);
+    const body = parse(memberInput.partial().extend({ playerEmail: z.string().trim().toLowerCase().max(200).nullish() }), req.body);
     const c = await getClub(userId(req));
     await memberOf(c.id, id);
+    const { playerEmail, ...rest } = body;
+    const set: Partial<typeof clubMembers.$inferInsert> = rest;
+    if (playerEmail !== undefined) {
+      if (!playerEmail) set.playerAccountId = null;
+      else {
+        const [acc] = await db.select({ id: schema.playerAccounts.id }).from(schema.playerAccounts).where(eq(schema.playerAccounts.email, playerEmail));
+        if (!acc) throw bad('Aucun compte joueur trouvé pour cet email.');
+        set.playerAccountId = acc.id;
+      }
+    }
     if (body.pseudo && (await pseudoTaken(c.id, body.pseudo, id))) throw bad('Ce pseudo est déjà utilisé dans le club.');
-    const [m] = await db.update(clubMembers).set(body).where(eq(clubMembers.id, id)).returning();
+    const [m] = await db.update(clubMembers).set(set).where(eq(clubMembers.id, id)).returning();
     return m;
   });
 
@@ -343,7 +353,7 @@ export async function clubRoutes(app: FastifyInstance) {
     return mutateTournament(body.tournamentId, uidv, (ctx) =>
       insertPlayers(
         ctx,
-        members.map((m) => ({ pseudo: m.pseudo, firstName: m.firstName, lastName: m.lastName, memberId: m.id, present: true })),
+        members.map((m) => ({ pseudo: m.pseudo, firstName: m.firstName, lastName: m.lastName, memberId: m.id, present: true, playerAccountId: m.playerAccountId })),
       ),
     );
   });

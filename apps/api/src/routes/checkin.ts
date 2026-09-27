@@ -7,7 +7,7 @@ import { bad, idParam, notFound, parse, userId } from '../lib';
 import { mutateTournament } from '../services/tournament';
 import { insertPlayers } from './players';
 
-const { clubs, clubMembers, registrations, events, players } = schema;
+const { clubs, clubMembers, registrations, events, players, playerAccounts } = schema;
 
 /**
  * Pointage par QR code dans un live :
@@ -22,7 +22,41 @@ export async function checkinRoutes(app: FastifyInstance) {
     const body = parse(z.object({ code: z.string().trim().min(3).max(200), add: z.boolean().optional(), override: z.boolean().optional() }), req.body);
     const uidv = userId(req);
     // accepte l'URL complète encodée dans le QR ou le code seul
-    const code = body.code.split(/[/?#=]/).filter(Boolean).pop()!.trim();
+    let code = body.code.split(/[/?#=]/).filter(Boolean).pop()!.trim();
+
+    // QR du compte joueur : on le rattache à sa carte membre ou à sa préinscription chez cet organisateur
+    if (code.startsWith('P')) {
+      const [acc] = await db.select().from(playerAccounts).where(eq(playerAccounts.qrCode, code));
+      if (!acc) throw notFound('QR non reconnu : le joueur a peut-être régénéré son QR.');
+      const [mem] = await db
+        .select({ code: clubMembers.code })
+        .from(clubMembers)
+        .innerJoin(clubs, eq(clubs.id, clubMembers.clubId))
+        .where(and(eq(clubMembers.playerAccountId, acc.id), eq(clubs.ownerId, uidv)));
+      const regs = await db
+        .select({ code: registrations.code, status: registrations.status, eventStatus: events.status })
+        .from(registrations)
+        .innerJoin(events, eq(events.id, registrations.eventId))
+        .where(and(eq(registrations.playerAccountId, acc.id), eq(events.ownerId, uidv)));
+      const reg = regs.find((r) => r.code && r.eventStatus !== 'imported' && (r.status === 'validated' || r.status === 'pending')) ?? regs.find((r) => r.code && r.status === 'validated');
+      if (mem) code = mem.code;
+      else if (reg?.code) code = reg.code;
+      else {
+        return mutateTournament(id, uidv, async (ctx) => {
+          const [existing] = await ctx.tx
+            .select()
+            .from(players)
+            .where(and(eq(players.tournamentId, id), sql`(${players.playerAccountId} = ${acc.id} or lower(${players.pseudo}) = lower(${acc.pseudo}))`));
+          if (existing) {
+            if (!existing.present) await ctx.tx.update(players).set({ present: true, playerAccountId: acc.id }).where(eq(players.id, existing.id));
+            return { kind: 'player', pseudo: acc.pseudo, state: existing.present ? 'already' : 'present' };
+          }
+          if (!body.add) return { kind: 'player', pseudo: acc.pseudo, state: 'checked', event: 'aucun événement de votre planning' };
+          await insertPlayers(ctx, [{ pseudo: acc.pseudo, firstName: acc.firstName, lastName: acc.lastName, playerAccountId: acc.id, present: true }]);
+          return { kind: 'player', pseudo: acc.pseudo, state: 'added' };
+        });
+      }
+    }
 
     if (code.startsWith('M')) {
       const [m] = await db
@@ -43,7 +77,7 @@ export async function checkinRoutes(app: FastifyInstance) {
         }
         const open = clockInfo(ctx.t.structure, resolveClock(ctx.t.clock, ctx.t.structure, ctx.now)).lateRegOpen;
         if (ctx.t.status === 'running' && !open && !body.override) return { kind: 'member', pseudo: member.pseudo, state: 'needs-override' };
-        await insertPlayers(ctx, [{ pseudo: member.pseudo, firstName: member.firstName, lastName: member.lastName, memberId: member.id, present: true }]);
+        await insertPlayers(ctx, [{ pseudo: member.pseudo, firstName: member.firstName, lastName: member.lastName, memberId: member.id, present: true, playerAccountId: member.playerAccountId }]);
         return { kind: 'member', pseudo: member.pseudo, state: 'added' };
       });
     }
@@ -69,7 +103,7 @@ export async function checkinRoutes(app: FastifyInstance) {
           return { kind: 'registration', pseudo: reg.pseudo, state: existing.present ? 'already' : 'present', event: r.e.name };
         }
         if (!body.add) return { kind: 'registration', pseudo: reg.pseudo, state: 'checked', event: r.e.name };
-        await insertPlayers(ctx, [{ pseudo: reg.pseudo, firstName: reg.firstName, lastName: reg.lastName, registrationId: reg.id, present: true }]);
+        await insertPlayers(ctx, [{ pseudo: reg.pseudo, firstName: reg.firstName, lastName: reg.lastName, registrationId: reg.id, present: true, playerAccountId: reg.playerAccountId }]);
         return { kind: 'registration', pseudo: reg.pseudo, state: 'added', event: r.e.name };
       });
     }
