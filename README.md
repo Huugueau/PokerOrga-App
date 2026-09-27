@@ -4,6 +4,7 @@ Outil auto-hébergé d'organisation de tournois de poker : timer synchronisé mu
 
 - Documentation fonctionnelle : [docs/01-ANALYSE-FONCTIONNELLE.md](docs/01-ANALYSE-FONCTIONNELLE.md)
 - Plan & spécifications techniques (document principal) : [docs/00-PLAN-ET-SPECS-TECHNIQUES.md](docs/00-PLAN-ET-SPECS-TECHNIQUES.md)
+- Déploiement sur VPS (Nginx + HTTPS, image GHCR) : [docs/02-DEPLOIEMENT-VPS.md](docs/02-DEPLOIEMENT-VPS.md)
 
 Stack : React 19 + Vite + Tailwind · Node 22 + Fastify 5 + Drizzle · PostgreSQL 16 · Docker.
 
@@ -61,7 +62,7 @@ npm run test:e2e
 
 La commande builde l'application puis la lance sur le port 8090 (`E2E_SKIP_BUILD=1` pour réutiliser le build existant, `npm run test:e2e:ui` pour le mode interactif). Les scénarios (`e2e/`) couvrent : authentification, timer (play/pause, niveaux, sortant, re-entry, mode TV), synchronisation multi-écrans et horloge liée, réglages (titre, format, import CSV, tirage des sièges, plan public, structure), fin de tournoi → championnat → historique, planning (inscriptions publiques, liste d'attente, import), Mon club (création, adhérent, demande publique, pointage QR), flights, pages publiques, compte joueur et vue mobile.
 
-La CI GitHub Actions (`.github/workflows/ci.yml`) enchaîne typecheck, tests unitaires, tests E2E et test de fumée de l'API sur une base PostgreSQL de service. Un second job construit l'image Docker, démarre la stack `docker compose` et rejoue le test de fumée sur le conteneur (:8080).
+La CI GitHub Actions (`.github/workflows/ci.yml`) enchaîne typecheck, tests unitaires, tests E2E et test de fumée de l'API sur une base PostgreSQL de service. Un second job construit l'image Docker, démarre la stack `docker compose` et rejoue le test de fumée sur le conteneur (:8080). Sur `main`, l'image est ensuite publiée sur `ghcr.io/huugueau/pokerorga-app`.
 
 ## Structure
 

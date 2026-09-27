@@ -1,0 +1,35 @@
+# PokerOrga — instance de production sur VPS, derrière le Nginx de l'hôte.
+# L'image est publiée par la CI sur GHCR ; l'application n'écoute qu'en local (127.0.0.1).
+# Mise à jour : docker compose pull && docker compose up -d
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-pokerorga}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Définissez POSTGRES_PASSWORD dans .env}
+      POSTGRES_DB: ${POSTGRES_DB:-pokerorga}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pokerorga} -d ${POSTGRES_DB:-pokerorga}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  app:
+    image: ${IMAGE:-ghcr.io/huugueau/pokerorga-app:latest}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-pokerorga}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-pokerorga}
+      JWT_SECRET: ${JWT_SECRET:?Définissez JWT_SECRET dans .env}
+      COOKIE_SECURE: "true"
+      ALLOW_REGISTRATION: ${ALLOW_REGISTRATION:-true}
+    ports:
+      - "127.0.0.1:${APP_PORT:-8080}:8080"
+
+volumes:
+  pgdata:
