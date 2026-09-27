@@ -3,6 +3,7 @@ import { formatMoney } from '@pokerorga/shared';
 import { CalendarDays, Expand, LayoutGrid, List, MapPin, Pause, Play, Printer, Trophy, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { QrCode } from '../components/QrCode';
 import { cx, Empty, fmtDate, Loading, Modal } from '../components/ui';
 import { api, ApiError, assetUrl } from '../lib/api';
 import { PlayerDetail, RankingList, type Detail, type RankRow } from './ChampionshipPages';
@@ -25,7 +26,7 @@ interface Plan {
   finalTableSize?: number;
   version: number;
   stats: { activePlayers: number; totalEntries: number };
-  tables: { number: number; isFinal: boolean; seats: { seat: number | null; pseudo: string }[] }[];
+  tables: { number: number; isFinal: boolean; seats: { seat: number | null; pseudo: string; member?: boolean; guest?: boolean }[] }[];
 }
 
 export function PublicPlanPage() {
@@ -96,6 +97,8 @@ export function PublicPlanPage() {
                       <li key={s} className={cx('flex gap-3 rounded-lg px-3 py-1.5 text-sm', p ? 'bg-white/5' : 'text-zinc-600')}>
                         <span className="w-14 font-bold text-zinc-400">Siège {s}</span>
                         <span className="font-semibold">{p?.pseudo ?? 'Libre'}</span>
+                        {p?.member && <span className="chip ml-auto border-accent-500/40 text-[10px] text-accent-300">Adhérent</span>}
+                        {p?.guest && <span className="chip ml-auto text-[10px]">Invité</span>}
                       </li>
                     );
                   })}
@@ -215,6 +218,7 @@ export function PublicRegisterPage() {
   const [err, setErr] = useState<string | null>(null);
   const [done, setDone] = useState<string | null>(null);
   const [position, setPosition] = useState<number | null>(null);
+  const [code, setCode] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   if (q.isLoading) return <Loading />;
   if (q.error) return <PublicFrame><Empty title="Page d’inscription introuvable." /></PublicFrame>;
@@ -227,9 +231,10 @@ export function PublicRegisterPage() {
     if (e.options.some((o) => !answers[o.id])) return setErr('Merci de répondre à toutes les options.');
     setBusy(true);
     try {
-      const r = await api.post<{ status: string; position: number | null }>(`/public/events/${token}/register`, { ...f, answers });
+      const r = await api.post<{ status: string; position: number | null; code: string | null }>(`/public/events/${token}/register`, { ...f, answers });
       setDone(r.status);
       setPosition(r.position);
+      setCode(r.code);
       q.refetch();
     } catch (x) {
       setErr(x instanceof ApiError ? x.message : 'Inscription impossible.');
@@ -271,6 +276,15 @@ export function PublicRegisterPage() {
             <div className="py-6 text-center">
               <p className="text-2xl font-black">{done === 'waitlist' ? `Liste d'attente${position ? ` — position n°${position}` : ''}` : 'Inscription enregistrée.'}</p>
               <p className="mt-2 text-sm text-zinc-400">{done === 'waitlist' ? "L'organisateur vous contactera si une place se libère." : "L'organisateur doit encore valider votre inscription."}</p>
+              {code && (
+                <div className="mt-5 flex flex-col items-center gap-2">
+                  <div className="rounded-xl bg-white p-3">
+                    <QrCode value={code} size={180} />
+                  </div>
+                  <p className="font-mono text-xs text-zinc-400">{code}</p>
+                  <p className="max-w-sm text-sm text-zinc-300">Faites une capture de ce QR : présentez-le à l'accueil le jour J pour confirmer votre présence.</p>
+                </div>
+              )}
             </div>
           ) : e.status !== 'open' ? (
             <p className="py-6 text-center font-semibold text-zinc-300">Les inscriptions sont closes.</p>
@@ -328,6 +342,130 @@ export function PublicRegisterPage() {
             {e.waitlist > 0 && <p className="mt-3 text-xs text-zinc-400">{e.waitlist} personne(s) en liste d'attente.</p>}
           </div>
         )}
+      </div>
+    </PublicFrame>
+  );
+}
+
+interface PublicClub {
+  name: string;
+  city: string | null;
+  description: string | null;
+  logoAssetId: string | null;
+  season: { name: string; startsOn: string | null; endsOn: string | null; duesAmount: number } | null;
+  members: number;
+  events: { name: string; eventDate: string | null; eventTime: string | null; location: string | null; publicToken: string }[];
+}
+
+export function PublicClubPage() {
+  const { token } = useParams();
+  const q = useQuery({ queryKey: ['pub-club', token], queryFn: () => api.get<PublicClub>(`/public/club/${token}`), retry: false });
+  const [f, setF] = useState({ pseudo: '', firstName: '', lastName: '', email: '', phone: '', message: '', membershipType: 'live' });
+  const [err, setErr] = useState<string | null>(null);
+  const [sent, setSent] = useState(false);
+  if (q.isLoading) return <Loading />;
+  if (q.error) return <PublicFrame><Empty title="Page club introuvable." /></PublicFrame>;
+  const c = q.data!;
+  return (
+    <PublicFrame>
+      <div className="mx-auto max-w-3xl space-y-5">
+        <div className="card p-7">
+          <div className="flex items-center gap-4">
+            {c.logoAssetId && <img src={assetUrl(c.logoAssetId)!} alt="" className="h-16 w-16 rounded-xl object-contain" />}
+            <div>
+              <h1 className="text-3xl font-black">{c.name}</h1>
+              <p className="flex items-center gap-1 text-sm text-zinc-400">
+                <MapPin size={14} /> {c.city ?? 'Ville non renseignée'} · {c.members} adhérent(s)
+              </p>
+            </div>
+          </div>
+          {c.description && <p className="mt-5 whitespace-pre-line text-zinc-300">{c.description}</p>}
+          {c.season && (
+            <p className="mt-4 text-sm text-zinc-400">
+              {c.season.name}
+              {c.season.duesAmount > 0 && ` · cotisation indicative ${formatMoney(c.season.duesAmount)}`}
+            </p>
+          )}
+        </div>
+        {c.events.length > 0 && (
+          <div className="card p-6">
+            <h2 className="mb-3 font-bold">Prochains tournois</h2>
+            <ul className="space-y-2">
+              {c.events.map((e) => (
+                <li key={e.publicToken}>
+                  <a href={`/p/register/${e.publicToken}`} className="flex items-center justify-between rounded-xl bg-white/5 px-4 py-3 hover:bg-white/10">
+                    <span className="font-semibold">{e.name}</span>
+                    <span className="text-sm text-zinc-400">
+                      {e.eventDate ? fmtDate(e.eventDate) : 'Date à définir'} · S'inscrire →
+                    </span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        <div className="card p-6">
+          {sent ? (
+            <div className="py-6 text-center">
+              <p className="text-xl font-black">Demande envoyée</p>
+              <p className="mt-2 text-sm text-zinc-400">Le bureau du club reviendra vers vous rapidement.</p>
+            </div>
+          ) : (
+            <form
+              className="space-y-3"
+              onSubmit={async (e) => {
+                e.preventDefault();
+                setErr(null);
+                try {
+                  await api.post(`/public/club/${token}/request`, f);
+                  setSent(true);
+                } catch (x) {
+                  setErr(x instanceof ApiError ? x.message : 'Envoi impossible.');
+                }
+              }}
+            >
+              <h2 className="text-lg font-bold">Demander à adhérer</h2>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="label">Pseudo *</label>
+                  <input className="input" value={f.pseudo} onChange={(e) => setF({ ...f, pseudo: e.target.value })} maxLength={40} />
+                </div>
+                <div>
+                  <label className="label">Email *</label>
+                  <input className="input" type="email" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} />
+                </div>
+                <div>
+                  <label className="label">Prénom</label>
+                  <input className="input" value={f.firstName} onChange={(e) => setF({ ...f, firstName: e.target.value })} />
+                </div>
+                <div>
+                  <label className="label">Nom</label>
+                  <input className="input" value={f.lastName} onChange={(e) => setF({ ...f, lastName: e.target.value })} />
+                </div>
+                <div>
+                  <label className="label">Téléphone</label>
+                  <input className="input" value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} />
+                </div>
+                <div>
+                  <label className="label">Type d'adhésion</label>
+                  <select className="input" value={f.membershipType} onChange={(e) => setF({ ...f, membershipType: e.target.value })}>
+                    <option value="live">Live</option>
+                    <option value="online">Online</option>
+                    <option value="both">Online + Live</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="label">Message</label>
+                <textarea className="input min-h-20" value={f.message} onChange={(e) => setF({ ...f, message: e.target.value })} maxLength={1000} />
+              </div>
+              {err && <p className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-300">{err}</p>}
+              <button className="btn-primary w-full py-3" disabled={!f.pseudo.trim() || !f.email.trim()}>
+                Envoyer ma demande
+              </button>
+            </form>
+          )}
+        </div>
       </div>
     </PublicFrame>
   );

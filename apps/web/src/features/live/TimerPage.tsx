@@ -11,6 +11,7 @@ import {
 import {
   ArrowLeftRight,
   Coins,
+  QrCode as QrIcon,
   Expand,
   Minimize,
   Monitor,
@@ -35,6 +36,7 @@ import { SettingsOverlay, type SettingsTab } from '../settings/SettingsOverlay';
 import { AddPlayerModal, BustFlow, MoveModal, SimplePlayerAction, type ActionKind } from './PlayerActions';
 import { ResultsModal } from './ResultsModal';
 import { LiveFeed } from './LiveFeed';
+import { ScanModal } from './ScanModal';
 import { useDeviceSound, useTimerSounds } from './sounds';
 import { useClockView, useLive, useLiveAction, type ClockView } from './useLive';
 
@@ -238,6 +240,7 @@ export default function TimerPage() {
       {(action === 'rebuy' || action === 'addon' || action === 'undo-rebuy') && <SimplePlayerAction snap={snap} kind={action} onClose={() => setAction(null)} />}
       {action === 'add' && <AddPlayerModal snap={snap} onClose={() => setAction(null)} lateRegOpen={clock.lateRegOpen} />}
       {action === 'move' && <MoveModal snap={snap} onClose={() => setAction(null)} />}
+      {action === 'scan' && <ScanModal tournamentId={t.id} onClose={() => setAction(null)} />}
       {showResults && (
         <ResultsModal
           snap={snap}
@@ -464,6 +467,9 @@ function DesktopTimer({
               <button className="btn-ghost" onClick={() => onAction('move')} disabled={snap.tables.length === 0}>
                 <ArrowLeftRight size={16} /> Déplacer
               </button>
+              <button className="btn-ghost col-span-2" onClick={() => onAction('scan')}>
+                <QrIcon size={16} /> Scan QR code
+              </button>
               {f === 'rebuys' && (
                 <button className="btn-ghost" onClick={() => onAction('rebuy')}>
                   <Coins size={16} /> Recave
@@ -546,6 +552,9 @@ function MobileTimer({
         </button>
         <button className="btn-ghost py-4" onClick={() => onAction('move')} disabled={snap.tables.length === 0}>
           <ArrowLeftRight size={18} /> Déplacer
+        </button>
+        <button className="btn-ghost col-span-2 py-4" onClick={() => onAction('scan')}>
+          <QrIcon size={18} /> Scan QR code
         </button>
         {f === 'rebuys' && (
           <button className="btn-ghost py-4" onClick={() => onAction('rebuy')}>

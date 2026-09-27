@@ -11,6 +11,7 @@ import {
   Palette,
   RotateCcw,
   Settings2,
+  Shield,
   SquareStack,
   Trophy,
   User,
@@ -43,6 +44,7 @@ const LINKS = [
   { to: '/lives', label: 'Mes lives', icon: SquareStack },
   { to: '/planning', label: 'Mon planning', icon: CalendarDays },
   { to: '/championships', label: 'Championnats', icon: Trophy },
+  { to: '/club', label: 'Mon club', icon: Shield },
   { to: '/history', label: 'Historique', icon: History },
   { to: '/account', label: 'Mon compte', icon: User },
 ];

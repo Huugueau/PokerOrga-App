@@ -24,10 +24,11 @@ import { RequireAuth } from './lib/auth';
 import { AccountPage } from './pages/AccountPage';
 import { AuthPage } from './pages/AuthPages';
 import { ChampionshipDetailPage, ChampionshipsPage } from './pages/ChampionshipPages';
+import { ClubCardsPage, ClubPage } from './pages/ClubPages';
 import { HistoryDetailPage, HistoryPage } from './pages/HistoryPages';
 import { CurrentLiveRedirect, LivesPage } from './pages/LivesPage';
 import { EventDetailPage, PlanningPage } from './pages/PlanningPages';
-import { PublicPlanPage, PublicRankingPage, PublicRegisterPage } from './pages/PublicPages';
+import { PublicClubPage, PublicPlanPage, PublicRankingPage, PublicRegisterPage } from './pages/PublicPages';
 
 const qc = new QueryClient({
   defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: true, staleTime: 2000 } },
@@ -51,6 +52,7 @@ createRoot(document.getElementById('root')!).render(
               <Route path="/p/plan/:token" element={<PublicPlanPage />} />
               <Route path="/p/ranking/:token" element={<PublicRankingPage />} />
               <Route path="/p/register/:token" element={<PublicRegisterPage />} />
+              <Route path="/p/club/:token" element={<PublicClubPage />} />
               <Route path="/" element={<RequireAuth><CurrentLiveRedirect /></RequireAuth>} />
               <Route path="/live/:id" element={<RequireAuth><TimerPage /></RequireAuth>} />
               <Route path="/lives" element={shell(<LivesPage />)} />
@@ -61,6 +63,8 @@ createRoot(document.getElementById('root')!).render(
               <Route path="/history" element={shell(<HistoryPage />)} />
               <Route path="/history/:id" element={shell(<HistoryDetailPage />)} />
               <Route path="/account" element={shell(<AccountPage />)} />
+              <Route path="/club" element={shell(<ClubPage />)} />
+              <Route path="/club/cards" element={<RequireAuth><ClubCardsPage /></RequireAuth>} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </BrowserRouter>

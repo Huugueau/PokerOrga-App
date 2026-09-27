@@ -237,7 +237,8 @@ function PlayerRowView({ snap, p, lateRegOpen, onEdit, onMove }: { snap: Tournam
       <td className="py-2 pr-2">
         <span className="font-semibold text-zinc-100">{p.pseudo}</span>
         {(p.firstName || p.lastName) && <span className="ml-2 text-xs text-zinc-500">{[p.firstName, p.lastName].filter(Boolean).join(' ')}</span>}
-        {p.registrationId && <span className={cx('ml-2 chip text-[10px]', p.present && 'border-emerald-400/40 text-emerald-300')}>{p.present ? '✓ Présent' : 'Préinscrit'}</span>}
+        {p.memberId ? <span className="ml-2 chip border-accent-500/40 text-[10px] text-accent-300">Adhérent</span> : p.registrationId ? <span className="ml-2 chip text-[10px]">Invité</span> : null}
+        {(p.registrationId || p.memberId) && <span className={cx('ml-1 chip text-[10px]', p.present && 'border-emerald-400/40 text-emerald-300')}>{p.present ? '✓ Présent' : 'Non pointé'}</span>}
       </td>
       <td className="py-2 pr-2 tabular">
         {p.tableNumber != null ? (

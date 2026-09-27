@@ -5,7 +5,7 @@ import { cx, Modal, useConfirm } from '../../components/ui';
 import { api, ApiError } from '../../lib/api';
 import { useLiveAction } from './useLive';
 
-export type ActionKind = 'bust' | 'rebuy' | 'addon' | 'undo-rebuy' | 'move' | 'add' | null;
+export type ActionKind = 'bust' | 'rebuy' | 'addon' | 'undo-rebuy' | 'move' | 'add' | 'scan' | null;
 
 export function seatLabel(p: Pick<Player, 'tableNumber' | 'seatNumber'>) {
   return p.tableNumber != null ? `T${p.tableNumber} · S${p.seatNumber}` : '';

@@ -43,4 +43,19 @@ if (events.items.length === 0) {
   const ev = await call('POST', '/events', { name: 'Tournoi du samedi', capacity: 20, eventDate: '2026-10-10', eventTime: '20:30', location: 'Chez Max', options: [{ label: 'Présent au repas, prévoir 15€' }] });
   await call('POST', `/events/${ev.id}/status`, { status: 'open' });
 }
+const club = await call('GET', '/club');
+if (!club.club) {
+  await call('POST', '/club', {
+    name: 'Club Démo',
+    city: 'Lyon',
+    description: 'Club associatif de poker : tournois le vendredi soir, championnat de saison et soirées Sit & Go.',
+    season: { name: 'Saison 2026-2027', startsOn: '2026-09-01', endsOn: '2027-08-31', duesAmount: 20 },
+  });
+  await call('PATCH', '/club', { published: true });
+  const { seasons } = await call('GET', '/club');
+  for (const pseudo of ['Maxou', 'La Fouine', 'Vanessa', 'Gus', 'Lucie']) {
+    const m = await call('POST', '/club/members', { pseudo, membershipType: 'live', seasonId: seasons[0].id });
+    if (pseudo !== 'Gus') await call('POST', `/club/members/${m.id}/payments`, { seasonId: seasons[0].id, kind: 'dues', amount: 20, paidOn: '2026-09-20' });
+  }
+}
 console.log('Démo prête.');
