@@ -140,6 +140,7 @@ export interface Player {
   prizeLabel: string | null;
   present: boolean;
   registrationId: string | null;
+  memberId: string | null;
   createdAt: string;
 }
 

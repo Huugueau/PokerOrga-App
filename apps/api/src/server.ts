@@ -12,6 +12,8 @@ import { env, isProd } from './env';
 import { HttpError, zodMessage } from './lib';
 import { authRoutes, COOKIE } from './routes/auth';
 import { championshipRoutes } from './routes/championships';
+import { checkinRoutes } from './routes/checkin';
+import { clubRoutes } from './routes/club';
 import { eventRoutes } from './routes/events';
 import { favoriteRoutes } from './routes/favorites';
 import { historyRoutes } from './routes/history';
@@ -70,6 +72,8 @@ export async function buildApp() {
       await api.register(historyRoutes);
       await api.register(championshipRoutes);
       await api.register(eventRoutes);
+      await api.register(clubRoutes);
+      await api.register(checkinRoutes);
     },
     { prefix: '/api' },
   );

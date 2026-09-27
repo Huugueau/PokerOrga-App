@@ -78,6 +78,7 @@ export function toPlayer(r: PlayerRow): Player {
     prizeLabel: r.prizeLabel,
     present: r.present,
     registrationId: r.registrationId,
+    memberId: r.memberId,
     createdAt: r.createdAt.toISOString(),
   };
 }

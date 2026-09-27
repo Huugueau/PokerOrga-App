@@ -91,4 +91,20 @@ assert(evd.registrations.filter((x) => x.status === 'waitlist').length === 1, "l
 for (const reg of evd.registrations.filter((x) => x.status === 'pending')) await call('PATCH', `/events/${ev.id}/registrations/${reg.id}`, { status: 'validated' });
 const imported = await call('POST', `/events/${ev.id}/import`, { tournamentId: fin.nextId, mode: 'validated' });
 assert(imported.added.length === 2, 'import des préinscrits dans le live');
+// Mon club
+const club = await call('POST', '/club', { name: 'Club Test', city: 'Lyon', description: 'Un club convivial pour tester la page publique.', season: { name: 'Saison 2026', duesAmount: 20 } });
+await call('PATCH', '/club', { published: true });
+const cinfo = await call('GET', '/club');
+const season = cinfo.seasons[0];
+const mem = await call('POST', '/club/members', { pseudo: 'Adhérent1', seasonId: season.id });
+await call('POST', `/public/club/${club.publicToken}/request`, { pseudo: 'Nouveau', email: 'n@test.local' });
+const reqs = await call('GET', '/club/requests');
+await call('POST', `/club/requests/${reqs.items[0].id}/accept`);
+await call('POST', `/club/members/${mem.id}/payments`, { seasonId: season.id, kind: 'dues', amount: 20, paidOn: '2026-09-27' });
+const ml = await call('GET', `/club/members?seasonId=${season.id}`);
+assert(ml.members.length === 2 && ml.members.find((m) => m.pseudo === 'Adhérent1').duesStatus === 'paid', 'club : adhérents, demande acceptée, cotisation payée');
+const ci = await call('POST', `/tournaments/${fin.nextId}/checkin`, { code: mem.code });
+assert(ci.state === 'added', 'scan carte membre → ajouté au live');
+const ci2 = await call('POST', `/tournaments/${fin.nextId}/checkin`, { code: `https://x/p/${mem.code}` });
+assert(ci2.state === 'already', 'second scan → déjà présent');
 console.log('\nTous les tests de fumée sont passés.');

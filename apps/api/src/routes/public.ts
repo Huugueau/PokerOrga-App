@@ -1,4 +1,4 @@
-import { and, asc, eq, ne } from 'drizzle-orm';
+import { and, asc, eq, ne, sql } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import { computeStats } from '@pokerorga/shared';
 import { z } from 'zod';
@@ -6,10 +6,10 @@ import { db, schema } from '../db';
 import { bad, notFound, parse } from '../lib';
 import { toPlayer, toTournament } from '../services/tournament';
 import { championshipView } from './championships';
-import { countTaken, pseudoInEvent, registrationInput } from './events';
+import { countTaken, pseudoInEvent, registrationCode, registrationInput } from './events';
 import { sse } from './tournaments';
 
-const { tournaments, players, tournamentTables, championships, events, registrations, assets, users } = schema;
+const { tournaments, players, tournamentTables, championships, events, registrations, assets, users, clubs, clubSeasons, clubMembers, clubMemberships, clubRequests } = schema;
 const tokenParam = z.object({ token: z.string().min(10).max(64) });
 
 async function tournamentByToken(token: string) {
@@ -48,7 +48,7 @@ export async function publicRoutes(app: FastifyInstance) {
         isFinal: tb.isFinal,
         seats: plist
           .filter((p) => p.status === 'active' && p.tableNumber === tb.number)
-          .map((p) => ({ seat: p.seatNumber, pseudo: p.pseudo, locked: p.seatLocked }))
+          .map((p) => ({ seat: p.seatNumber, pseudo: p.pseudo, locked: p.seatLocked, member: !!p.memberId, guest: !p.memberId && !!p.registrationId }))
           .sort((a, b) => (a.seat ?? 0) - (b.seat ?? 0)),
       })),
     };
@@ -118,13 +118,68 @@ export async function publicRoutes(app: FastifyInstance) {
     const full = e.capacity != null && (await countTaken(e.id)) >= e.capacity;
     const [r] = await db
       .insert(registrations)
-      .values({ eventId: e.id, ...body, email: body.email || null, status: full ? 'waitlist' : 'pending' })
-      .returning({ status: registrations.status });
+      .values({ eventId: e.id, ...body, email: body.email || null, status: full ? 'waitlist' : 'pending', code: registrationCode() })
+      .returning({ status: registrations.status, code: registrations.code });
     let position: number | null = null;
     if (r.status === 'waitlist') {
       const wl = await db.select({ id: registrations.id }).from(registrations).where(and(eq(registrations.eventId, e.id), eq(registrations.status, 'waitlist')));
       position = wl.length;
     }
-    return { ok: true, status: r.status, position };
+    return { ok: true, status: r.status, position, code: r.code };
+  });
+
+  // ---- Page publique du club ----
+  app.get('/public/club/:token', async (req) => {
+    const { token } = parse(tokenParam, req.params);
+    const [c] = await db.select().from(clubs).where(eq(clubs.publicToken, token));
+    if (!c || !c.published) throw notFound('Page club introuvable.');
+    const [season] = await db.select().from(clubSeasons).where(and(eq(clubSeasons.clubId, c.id), eq(clubSeasons.open, true)));
+    const members = season
+      ? await db.select({ id: clubMemberships.id }).from(clubMemberships).where(eq(clubMemberships.seasonId, season.id))
+      : await db.select({ id: clubMembers.id }).from(clubMembers).where(eq(clubMembers.clubId, c.id));
+    const now = new Date().toISOString().slice(0, 10);
+    const upcoming = await db
+      .select({ name: events.name, eventDate: events.eventDate, eventTime: events.eventTime, location: events.location, publicToken: events.publicToken, status: events.status })
+      .from(events)
+      .where(and(eq(events.ownerId, c.ownerId), eq(events.status, 'open')));
+    return {
+      name: c.name,
+      city: c.city,
+      description: c.description,
+      logoAssetId: c.logoAssetId,
+      season: season ? { name: season.name, startsOn: season.startsOn, endsOn: season.endsOn, duesAmount: season.duesAmount } : null,
+      members: members.length,
+      events: upcoming.filter((e) => !e.eventDate || e.eventDate >= now),
+    };
+  });
+
+  app.post('/public/club/:token/request', async (req) => {
+    const { token } = parse(tokenParam, req.params);
+    const body = parse(
+      z.object({
+        pseudo: z.string().trim().min(1, 'Veuillez saisir un pseudo.').max(40),
+        firstName: z.string().trim().max(60).nullish(),
+        lastName: z.string().trim().max(60).nullish(),
+        email: z.string().trim().email('Email invalide.').max(200),
+        phone: z.string().trim().max(40).nullish(),
+        message: z.string().trim().max(1000).nullish(),
+        membershipType: z.enum(['live', 'online', 'both']).default('live'),
+      }),
+      req.body,
+    );
+    const [c] = await db.select().from(clubs).where(eq(clubs.publicToken, token));
+    if (!c || !c.published) throw notFound('Page club introuvable.');
+    const [taken] = await db
+      .select({ id: clubMembers.id })
+      .from(clubMembers)
+      .where(and(eq(clubMembers.clubId, c.id), sql`lower(${clubMembers.pseudo}) = lower(${body.pseudo})`));
+    const [pending] = await db
+      .select({ id: clubRequests.id })
+      .from(clubRequests)
+      .where(and(eq(clubRequests.clubId, c.id), eq(clubRequests.status, 'pending'), sql`lower(${clubRequests.pseudo}) = lower(${body.pseudo})`));
+    if (taken || pending) throw bad('Ce pseudo est déjà utilisé dans le club.');
+    const [season] = await db.select().from(clubSeasons).where(and(eq(clubSeasons.clubId, c.id), eq(clubSeasons.open, true)));
+    await db.insert(clubRequests).values({ clubId: c.id, seasonId: season?.id ?? null, ...body, firstName: body.firstName || null, lastName: body.lastName || null, phone: body.phone || null, message: body.message || null });
+    return { ok: true };
   });
 }

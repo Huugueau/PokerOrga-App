@@ -111,6 +111,7 @@ export const players = pgTable(
     prizeLabel: text('prize_label'),
     present: boolean('present').notNull().default(false),
     registrationId: uuid('registration_id'),
+    memberId: uuid('member_id'),
     createdAt: ts('created_at').notNull().defaultNow(),
   },
   (t) => [
@@ -277,7 +278,117 @@ export const registrations = pgTable(
     answers: jsonb('answers').$type<Record<string, 'yes' | 'no' | 'unknown'>>().notNull().default({}),
     status: text('status').$type<'pending' | 'validated' | 'waitlist' | 'refused' | 'cancelled'>().notNull().default('pending'),
     present: boolean('present').notNull().default(false),
+    code: text('code').unique(),
     createdAt: ts('created_at').notNull().defaultNow(),
   },
   (t) => [uniqueIndex('registrations_event_pseudo_uq').on(t.eventId, sql`lower(${t.pseudo})`)],
 );
+
+// ---------------- Mon club ----------------
+export interface ClubRole {
+  id: string;
+  name: string;
+  color: string;
+}
+
+export const clubs = pgTable('clubs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  ownerId: uuid('owner_id')
+    .notNull()
+    .unique()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  city: text('city'),
+  description: text('description'),
+  logoAssetId: uuid('logo_asset_id'),
+  roles: jsonb('roles').$type<ClubRole[]>().notNull().default([]),
+  published: boolean('published').notNull().default(false),
+  publicToken: text('public_token').notNull().unique(),
+  createdAt: ts('created_at').notNull().defaultNow(),
+});
+
+export const clubSeasons = pgTable('club_seasons', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  clubId: uuid('club_id')
+    .notNull()
+    .references(() => clubs.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  startsOn: date('starts_on', { mode: 'string' }),
+  endsOn: date('ends_on', { mode: 'string' }),
+  open: boolean('open').notNull().default(true),
+  duesAmount: num('dues_amount').notNull().default(0),
+  createdAt: ts('created_at').notNull().defaultNow(),
+});
+
+export const clubMembers = pgTable(
+  'club_members',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    clubId: uuid('club_id')
+      .notNull()
+      .references(() => clubs.id, { onDelete: 'cascade' }),
+    pseudo: text('pseudo').notNull(),
+    firstName: text('first_name'),
+    lastName: text('last_name'),
+    email: text('email'),
+    phone: text('phone'),
+    address: text('address'),
+    note: text('note'),
+    membershipType: text('membership_type').$type<'live' | 'online' | 'both'>().notNull().default('live'),
+    roleIds: jsonb('role_ids').$type<string[]>().notNull().default([]),
+    code: text('code').notNull().unique(),
+    createdAt: ts('created_at').notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex('club_members_pseudo_uq').on(t.clubId, sql`lower(${t.pseudo})`)],
+);
+
+export const clubMemberships = pgTable(
+  'club_memberships',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    memberId: uuid('member_id')
+      .notNull()
+      .references(() => clubMembers.id, { onDelete: 'cascade' }),
+    seasonId: uuid('season_id')
+      .notNull()
+      .references(() => clubSeasons.id, { onDelete: 'cascade' }),
+    exempt: boolean('exempt').notNull().default(false),
+    duesExpected: num('dues_expected').notNull().default(0),
+    createdAt: ts('created_at').notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex('club_memberships_uq').on(t.memberId, t.seasonId)],
+);
+
+export const clubPayments = pgTable('club_payments', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  memberId: uuid('member_id')
+    .notNull()
+    .references(() => clubMembers.id, { onDelete: 'cascade' }),
+  seasonId: uuid('season_id')
+    .notNull()
+    .references(() => clubSeasons.id, { onDelete: 'cascade' }),
+  kind: text('kind').$type<'dues' | 'donation'>().notNull(),
+  amount: num('amount').notNull(),
+  method: text('method').$type<'cash' | 'check' | 'transfer' | 'helloasso' | 'other'>().notNull().default('cash'),
+  paidOn: date('paid_on', { mode: 'string' }).notNull(),
+  note: text('note'),
+  cancelledAt: ts('cancelled_at'),
+  createdAt: ts('created_at').notNull().defaultNow(),
+});
+
+export const clubRequests = pgTable('club_requests', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  clubId: uuid('club_id')
+    .notNull()
+    .references(() => clubs.id, { onDelete: 'cascade' }),
+  seasonId: uuid('season_id').references(() => clubSeasons.id, { onDelete: 'set null' }),
+  pseudo: text('pseudo').notNull(),
+  firstName: text('first_name'),
+  lastName: text('last_name'),
+  email: text('email'),
+  phone: text('phone'),
+  message: text('message'),
+  membershipType: text('membership_type').$type<'live' | 'online' | 'both'>().notNull().default('live'),
+  status: text('status').$type<'pending' | 'accepted' | 'refused'>().notNull().default('pending'),
+  createdAt: ts('created_at').notNull().defaultNow(),
+});

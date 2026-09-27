@@ -15,6 +15,13 @@
       "when": 1790474968930,
       "tag": "0001_rebuy_grid",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790475132327,
+      "tag": "0002_club",
+      "breakpoints": true
     }
   ]
 }

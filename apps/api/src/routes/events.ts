@@ -8,6 +8,7 @@ import { mutateTournament } from '../services/tournament';
 import { insertPlayers } from './players';
 
 const { events, registrations } = schema;
+export const registrationCode = () => 'R' + publicToken(10);
 type EventRow = typeof events.$inferSelect;
 
 export const eventInput = z.object({
@@ -133,7 +134,7 @@ export async function eventRoutes(app: FastifyInstance) {
     if (await pseudoInEvent(id, body.pseudo)) throw bad('Ce pseudo est déjà inscrit.');
     const [row] = await db
       .insert(registrations)
-      .values({ eventId: id, ...body, email: body.email || null, status: 'validated' })
+      .values({ eventId: id, ...body, email: body.email || null, status: 'validated', code: registrationCode() })
       .returning();
     return row;
   });

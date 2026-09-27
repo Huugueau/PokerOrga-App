@@ -52,7 +52,7 @@ export async function seatPlayer(ctx: MutationCtx, playerId: string) {
   return res.seat;
 }
 
-export async function insertPlayers(ctx: MutationCtx, rows: { pseudo: string; firstName?: string | null; lastName?: string | null; registrationId?: string | null; present?: boolean }[]) {
+export async function insertPlayers(ctx: MutationCtx, rows: { pseudo: string; firstName?: string | null; lastName?: string | null; registrationId?: string | null; memberId?: string | null; present?: boolean }[]) {
   const { tx, t } = ctx;
   const existing = await loadPlayers(tx, t.id);
   const seen = new Set(existing.map((p) => p.pseudo.toLowerCase()));
@@ -74,6 +74,7 @@ export async function insertPlayers(ctx: MutationCtx, rows: { pseudo: string; fi
         lastName: r.lastName || null,
         bountyValue: baseBounty(t.settings),
         registrationId: r.registrationId ?? null,
+        memberId: r.memberId ?? null,
         present: r.present ?? false,
       })
       .returning();
