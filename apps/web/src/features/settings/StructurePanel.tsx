@@ -104,13 +104,13 @@ export function StructurePanel({ snap }: { snap: TournamentSnapshot }) {
           </div>
         }
       >
-        <p className="mb-3 text-xs text-stone-400">
+        <p className="mb-3 text-xs text-zinc-400">
           Glissez les lignes pour réorganiser. « LateReg » : la late registration se termine à la fin de ce niveau.{' '}
-          <button className="text-gold-400 underline" onClick={() => downloadText('modele-structure.csv', STRUCTURE_CSV_TEMPLATE)}>
+          <button className="text-accent-400 underline" onClick={() => downloadText('modele-structure.csv', STRUCTURE_CSV_TEMPLATE)}>
             Modèle CSV
           </button>
         </p>
-        <div className="hidden grid-cols-[28px_60px_1fr_1fr_1fr_90px_80px_36px] gap-2 px-2 pb-1 text-[11px] font-bold uppercase tracking-wider text-stone-500 md:grid">
+        <div className="hidden grid-cols-[28px_60px_1fr_1fr_1fr_90px_80px_36px] gap-2 px-2 pb-1 text-[11px] font-bold uppercase tracking-wider text-zinc-500 md:grid">
           <span />
           <span>Niv.</span>
           <span>SB</span>
@@ -207,7 +207,7 @@ export function StructurePanel({ snap }: { snap: TournamentSnapshot }) {
             </ul>
           ) : (
             <>
-              <p className="mb-2 text-sm text-stone-300">
+              <p className="mb-2 text-sm text-zinc-300">
                 {csvPreview.levels.filter((l) => l.kind === 'level').length} niveau(x) · {csvPreview.levels.filter((l) => l.kind === 'break').length} pause(s). Vérifiez la structure puis appliquez-la dans l'éditeur.
               </p>
               <StructureTable levels={csvPreview.levels} />
@@ -230,11 +230,11 @@ function LevelRow({ level, number, current, onPatch, onLateReg, onDelete }: { le
       className={cx(
         'grid grid-cols-[28px_1fr_36px] items-center gap-2 rounded-xl border px-2 py-1.5 md:grid-cols-[28px_60px_1fr_1fr_1fr_90px_80px_36px]',
         isBreak ? 'border-sky-400/20 bg-sky-500/5' : 'border-white/10 bg-white/5',
-        current && 'ring-2 ring-gold-500/60',
+        current && 'ring-2 ring-accent-500/60',
         isDragging && 'z-10 opacity-80 shadow-glass',
       )}
     >
-      <button className="cursor-grab text-stone-500 hover:text-stone-200" {...attributes} {...listeners} aria-label="Glisser pour réorganiser">
+      <button className="cursor-grab text-zinc-500 hover:text-zinc-200" {...attributes} {...listeners} aria-label="Glisser pour réorganiser">
         <GripVertical size={16} />
       </button>
       {isBreak ? (
@@ -247,7 +247,7 @@ function LevelRow({ level, number, current, onPatch, onLateReg, onDelete }: { le
         </div>
       ) : (
         <div className="grid grid-cols-4 gap-2 md:contents">
-          <span className="self-center font-bold text-stone-300">{number}</span>
+          <span className="self-center font-bold text-zinc-300">{number}</span>
           <NumberField value={level.sb} onCommit={(v) => onPatch({ sb: v ?? 0 })} />
           <NumberField value={level.bb} onCommit={(v) => onPatch({ bb: v ?? 0, sb: level.sb === level.bb / 2 ? (v ?? 0) / 2 : level.sb })} />
           <NumberField value={level.ante} onCommit={(v) => onPatch({ ante: v ?? 0 })} />
@@ -257,9 +257,9 @@ function LevelRow({ level, number, current, onPatch, onLateReg, onDelete }: { le
         <NumberField value={level.minutes} min={1} max={600} suffix="min" onCommit={(v) => onPatch({ minutes: v ?? 20 })} />
       </span>
       <span className="hidden md:flex md:justify-center">
-        <input type="checkbox" className="h-4 w-4 accent-[#c9a449]" checked={level.lateRegEnd} onChange={(e) => onLateReg(e.target.checked)} aria-label="Fin de late registration" />
+        <input type="checkbox" className="h-4 w-4 accent-[#4ea486]" checked={level.lateRegEnd} onChange={(e) => onLateReg(e.target.checked)} aria-label="Fin de late registration" />
       </span>
-      <button className="rounded-lg p-1.5 text-stone-500 hover:bg-red-500/15 hover:text-red-300" onClick={onDelete} aria-label="Supprimer">
+      <button className="rounded-lg p-1.5 text-zinc-500 hover:bg-red-500/15 hover:text-red-300" onClick={onDelete} aria-label="Supprimer">
         <Trash2 size={15} />
       </button>
     </div>
@@ -271,7 +271,7 @@ export function StructureTable({ levels }: { levels: Level[] }) {
     <div className="max-h-[50vh] overflow-y-auto">
       <table className="w-full text-sm tabular">
         <thead>
-          <tr className="text-left text-xs uppercase text-stone-400">
+          <tr className="text-left text-xs uppercase text-zinc-400">
             <th className="py-1">Niv.</th>
             <th>SB</th>
             <th>BB</th>
@@ -387,7 +387,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 function SumBox({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-xl bg-white/5 p-2">
-      <p className="text-[10px] font-bold uppercase tracking-wider text-stone-400">{label}</p>
+      <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">{label}</p>
       <p className="text-sm font-bold">{value}</p>
     </div>
   );
@@ -401,7 +401,7 @@ function FavoriteStructures({ levels, onLoad }: { levels: Level[]; onLoad: (l: L
   const [name, setName] = useState('');
   const refresh = () => qc.invalidateQueries({ queryKey: ['fav-structures'] });
   return (
-    <Section title="Mes structures favorites" right={<Star size={18} className="text-gold-400" />}>
+    <Section title="Mes structures favorites" right={<Star size={18} className="text-accent-400" />}>
       <div className="flex flex-wrap gap-2">
         <input className="input max-w-xs" placeholder="Nom de la structure" value={name} onChange={(e) => setName(e.target.value)} maxLength={60} />
         <button
@@ -421,7 +421,7 @@ function FavoriteStructures({ levels, onLoad }: { levels: Level[]; onLoad: (l: L
         </button>
       </div>
       <div className="mt-3 space-y-2">
-        {q.data?.items.length === 0 && <p className="text-sm text-stone-400">Aucune structure sauvegardée pour le moment.</p>}
+        {q.data?.items.length === 0 && <p className="text-sm text-zinc-400">Aucune structure sauvegardée pour le moment.</p>}
         {q.data?.items.map((f) => (
           <div key={f.id} className="flex flex-wrap items-center gap-3 rounded-xl bg-white/5 px-3 py-2">
             <button
@@ -437,14 +437,14 @@ function FavoriteStructures({ levels, onLoad }: { levels: Level[]; onLoad: (l: L
             >
               {f.name}
             </button>
-            <span className="flex-1 text-xs text-stone-400">
+            <span className="flex-1 text-xs text-zinc-400">
               {f.levels.filter((l) => l.kind === 'level').length} niveaux · {formatDuration(f.levels.reduce((a, l) => a + l.minutes, 0) * 60000)}
             </span>
             <button className="btn-ghost btn-sm" onClick={() => onLoad(f.levels)}>
               Charger
             </button>
             <button
-              className="rounded-lg p-1.5 text-stone-400 hover:text-red-300"
+              className="rounded-lg p-1.5 text-zinc-400 hover:text-red-300"
               onClick={async () => {
                 if (await confirm({ title: `Supprimer « ${f.name} » ?`, confirmLabel: 'Supprimer', danger: true })) {
                   await api.del(`/favorites/structures/${f.id}`);

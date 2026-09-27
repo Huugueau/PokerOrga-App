@@ -4,9 +4,9 @@
 
 :root {
   color-scheme: dark;
-  --c-primary: #13233a;
-  --c-secondary: #c9a449;
-  --c-title: #f5f5f4;
+  --c-primary: #1a1f26;
+  --c-secondary: #4ea486;
+  --c-title: #f4f4f5;
   --glass-opacity: 0.55;
   --glass-blur: 12px;
   --font-timer: 'Inter';
@@ -19,16 +19,16 @@ body,
 }
 
 body {
-  @apply bg-ink-900 text-stone-100 antialiased;
+  @apply bg-ink-900 text-zinc-100 antialiased;
   font-family: Inter, system-ui, sans-serif;
   -webkit-tap-highlight-color: transparent;
 }
 
 .bg-felt {
   background:
-    radial-gradient(1200px 600px at 20% -10%, rgba(201, 164, 73, 0.1), transparent 60%),
-    radial-gradient(900px 500px at 110% 110%, rgba(53, 85, 127, 0.35), transparent 60%),
-    #0a1828;
+    radial-gradient(1200px 600px at 20% -10%, rgba(255, 255, 255, 0.035), transparent 60%),
+    radial-gradient(900px 500px at 110% 110%, rgba(78, 164, 134, 0.06), transparent 60%),
+    #111418;
 }
 
 @layer components {
@@ -37,13 +37,13 @@ body {
   }
   .btn {
     @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition
-      disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-400/70;
+      disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400/70;
   }
   .btn-primary {
-    @apply btn bg-gold-500 text-ink-950 hover:bg-gold-400;
+    @apply btn bg-accent-500 text-ink-950 hover:bg-accent-400;
   }
   .btn-ghost {
-    @apply btn border border-white/10 bg-white/5 text-stone-100 hover:bg-white/10;
+    @apply btn border border-white/10 bg-white/5 text-zinc-100 hover:bg-white/10;
   }
   .btn-danger {
     @apply btn border border-red-400/30 bg-red-500/15 text-red-200 hover:bg-red-500/25;
@@ -52,17 +52,17 @@ body {
     @apply px-3 py-1.5 text-xs;
   }
   .input {
-    @apply w-full rounded-xl border border-white/10 bg-ink-950/60 px-3 py-2 text-sm text-stone-100 placeholder:text-stone-500
-      focus:border-gold-500/60 focus:outline-none focus:ring-2 focus:ring-gold-500/20;
+    @apply w-full rounded-xl border border-white/10 bg-ink-950/60 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-500
+      focus:border-accent-500/60 focus:outline-none focus:ring-2 focus:ring-accent-500/20;
   }
   .label {
-    @apply mb-1 block text-xs font-semibold uppercase tracking-wider text-stone-400;
+    @apply mb-1 block text-xs font-semibold uppercase tracking-wider text-zinc-400;
   }
   .eyebrow {
-    @apply text-[11px] font-bold uppercase tracking-[0.14em] text-stone-400;
+    @apply text-[11px] font-bold uppercase tracking-[0.14em] text-zinc-400;
   }
   .chip {
-    @apply inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-xs font-medium text-stone-300;
+    @apply inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-xs font-medium text-zinc-300;
   }
 }
 
@@ -75,7 +75,7 @@ body {
   backdrop-filter: blur(var(--glass-blur));
   -webkit-backdrop-filter: blur(var(--glass-blur));
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-top: 3px solid var(--c-secondary);
+  border-top: 2px solid var(--c-secondary);
 }
 .accent {
   color: var(--c-secondary);

@@ -20,7 +20,7 @@ export function PayoutsPanel({ snap }: { snap: TournamentSnapshot }) {
   if (s.isFree && p.type === 'money') {
     return (
       <Section title="Gestion des places payées">
-        <p className="text-sm text-stone-300">Le tournoi est en mode Gratuit : aucune place payée en argent. Vous pouvez distribuer des lots.</p>
+        <p className="text-sm text-zinc-300">Le tournoi est en mode Gratuit : aucune place payée en argent. Vous pouvez distribuer des lots.</p>
         <button className="btn-ghost mt-3" onClick={() => commit({ ...draft, type: 'lots', mode: 'manual', lots: draft.lots.length ? draft.lots : ['', '', ''] })}>
           Distribuer des lots
         </button>
@@ -61,8 +61,8 @@ export function PayoutsPanel({ snap }: { snap: TournamentSnapshot }) {
           )}
           {draft.mode === 'auto' ? (
             <>
-              <p className="mb-3 text-sm text-stone-400">La répartition est recalculée automatiquement selon le nombre d'entrées. Modifiez un montant pour passer en mode manuel.</p>
-              {displayed.length === 0 && <p className="text-sm text-stone-400">Ajouter des joueurs pour afficher les places payées</p>}
+              <p className="mb-3 text-sm text-zinc-400">La répartition est recalculée automatiquement selon le nombre d'entrées. Modifiez un montant pour passer en mode manuel.</p>
+              {displayed.length === 0 && <p className="text-sm text-zinc-400">Ajouter des joueurs pour afficher les places payées</p>}
             </>
           ) : (
             <p className={cx('mb-3 text-sm', Math.round(manualSum) === Math.round(pool) ? 'text-emerald-300' : 'text-amber-300')}>
@@ -78,8 +78,8 @@ export function PayoutsPanel({ snap }: { snap: TournamentSnapshot }) {
                   amounts[i] = n ?? 0;
                   commit({ ...draft, mode: 'manual', amounts });
                 }} />
-                <span className="text-xs text-stone-500">{pool > 0 ? `${Math.round((v / pool) * 1000) / 10} %` : ''}</span>
-                <button className="rounded-lg p-1.5 text-stone-500 hover:text-red-300" onClick={() => commit({ ...draft, mode: 'manual', amounts: displayed.filter((_, j) => j !== i) })} aria-label="Supprimer">
+                <span className="text-xs text-zinc-500">{pool > 0 ? `${Math.round((v / pool) * 1000) / 10} %` : ''}</span>
+                <button className="rounded-lg p-1.5 text-zinc-500 hover:text-red-300" onClick={() => commit({ ...draft, mode: 'manual', amounts: displayed.filter((_, j) => j !== i) })} aria-label="Supprimer">
                   <Trash2 size={15} />
                 </button>
               </div>
@@ -115,7 +115,7 @@ export function PayoutsPanel({ snap }: { snap: TournamentSnapshot }) {
                     commit({ ...draft, lots });
                   }}
                 />
-                <button className="rounded-lg p-1.5 text-stone-500 hover:text-red-300" onClick={() => commit({ ...draft, lots: draft.lots.filter((_, j) => j !== i) })} aria-label="Supprimer">
+                <button className="rounded-lg p-1.5 text-zinc-500 hover:text-red-300" onClick={() => commit({ ...draft, lots: draft.lots.filter((_, j) => j !== i) })} aria-label="Supprimer">
                   <Trash2 size={15} />
                 </button>
               </div>

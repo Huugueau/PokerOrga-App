@@ -4,13 +4,15 @@ export default {
   theme: {
     extend: {
       colors: {
-        ink: { 950: '#07111e', 900: '#0a1828', 800: '#10223a', 700: '#18304f', 600: '#234066', 500: '#35557f' },
-        gold: { 300: '#e6cf8a', 400: '#d8b964', 500: '#c9a449', 600: '#a8852f', 700: '#7d6322' },
+        // graphite neutre
+        ink: { 950: '#0b0d10', 900: '#111418', 800: '#181c21', 700: '#222830', 600: '#2e3540', 500: '#434c59' },
+        // vert-de-gris discret, utilisé avec parcimonie
+        accent: { 300: '#a7d8c5', 400: '#72bfa2', 500: '#4ea486', 600: '#3a866b', 700: '#2c6a55' },
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
       },
-      boxShadow: { glass: '0 10px 40px -12px rgba(0,0,0,.6)' },
+      boxShadow: { glass: '0 12px 32px -16px rgba(0,0,0,.7)' },
     },
   },
   plugins: [],

@@ -120,7 +120,7 @@ export function SettingsOverlay({
         <div className="border-b border-white/10 p-4">
           <p className="eyebrow">Tournoi de cet écran</p>
           <p className="mt-1 truncate font-bold">{t.title}</p>
-          <p className="text-xs text-stone-400">{statusLabel}</p>
+          <p className="text-xs text-zinc-400">{statusLabel}</p>
           <div className="mt-3 flex flex-wrap gap-1.5">
             <button className="btn-ghost btn-sm" onClick={onShowResults} title="Classement">
               <ListOrdered size={14} />
@@ -144,20 +144,20 @@ export function SettingsOverlay({
         </div>
         <nav className="flex-1 overflow-y-auto p-2">
           {TABS.map(({ key, label, icon: Icon }) => (
-            <button key={key} onClick={() => onTab(key)} className={cx('flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold', tab === key ? 'bg-gold-500/15 text-gold-300' : 'text-stone-300 hover:bg-white/5')}>
+            <button key={key} onClick={() => onTab(key)} className={cx('flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold', tab === key ? 'bg-accent-500/15 text-accent-300' : 'text-zinc-300 hover:bg-white/5')}>
               <Icon size={17} /> {label}
             </button>
           ))}
           <div className="my-2 border-t border-white/10" />
           {LINKS.map(({ to, label, icon: Icon }) => (
-            <Link key={to} to={to} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-stone-300 hover:bg-white/5">
+            <Link key={to} to={to} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-zinc-300 hover:bg-white/5">
               <Icon size={17} /> {label}
             </Link>
           ))}
         </nav>
-        <div className="border-t border-white/10 p-3 text-xs text-stone-400">
+        <div className="border-t border-white/10 p-3 text-xs text-zinc-400">
           <p className="truncate">{me.data?.email}</p>
-          <button className="mt-2 flex items-center gap-2 text-stone-300 hover:text-white" onClick={logout}>
+          <button className="mt-2 flex items-center gap-2 text-zinc-300 hover:text-white" onClick={logout}>
             <LogOut size={14} /> Déconnexion
           </button>
         </div>
@@ -220,5 +220,5 @@ function SaveIndicator() {
     };
   }, []);
   if (s === 'idle') return null;
-  return <span className="text-xs text-stone-400">{s === 'saving' ? 'Enregistrement…' : '✓ Enregistré'}</span>;
+  return <span className="text-xs text-zinc-400">{s === 'saving' ? 'Enregistrement…' : '✓ Enregistré'}</span>;
 }

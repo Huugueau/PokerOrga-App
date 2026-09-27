@@ -59,9 +59,9 @@ export function Modal({
       <div ref={ref} role="dialog" aria-modal="true" className={cx('animate-pop flex max-h-[92vh] w-full flex-col rounded-t-2xl border border-white/10 bg-ink-800 shadow-glass sm:rounded-2xl', w)}>
         {title !== undefined && (
           <div className="flex items-center justify-between gap-4 border-b border-white/10 px-5 py-4">
-            <h2 className="text-base font-bold text-stone-50">{title}</h2>
+            <h2 className="text-base font-bold text-zinc-50">{title}</h2>
             {dismissable && (
-              <button data-close className="rounded-lg p-1 text-stone-400 hover:bg-white/10 hover:text-white" onClick={onClose} aria-label="Fermer">
+              <button data-close className="rounded-lg p-1 text-zinc-400 hover:bg-white/10 hover:text-white" onClick={onClose} aria-label="Fermer">
                 <X size={18} />
               </button>
             )}
@@ -111,16 +111,16 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
         }
       >
         {state?.lines?.length ? (
-          <ul className="space-y-1.5 text-sm text-stone-300">
+          <ul className="space-y-1.5 text-sm text-zinc-300">
             {state.lines.map((l) => (
               <li key={l} className="flex gap-2">
-                <span className="text-gold-500">•</span>
+                <span className="text-accent-500">•</span>
                 {l}
               </li>
             ))}
           </ul>
         ) : (
-          <p className="text-sm text-stone-300">Confirmer cette action ?</p>
+          <p className="text-sm text-zinc-300">Confirmer cette action ?</p>
         )}
       </Modal>
     </ConfirmCtx.Provider>
@@ -174,8 +174,8 @@ export function Toggle({ checked, onChange, disabled, label, hint }: { checked: 
     <label className={cx('flex items-start justify-between gap-4', disabled ? 'opacity-50' : 'cursor-pointer')}>
       {(label || hint) && (
         <span className="min-w-0">
-          {label && <span className="block text-sm font-medium text-stone-100">{label}</span>}
-          {hint && <span className="block text-xs text-stone-400">{hint}</span>}
+          {label && <span className="block text-sm font-medium text-zinc-100">{label}</span>}
+          {hint && <span className="block text-xs text-zinc-400">{hint}</span>}
         </span>
       )}
       <button
@@ -184,7 +184,7 @@ export function Toggle({ checked, onChange, disabled, label, hint }: { checked: 
         aria-checked={checked}
         disabled={disabled}
         onClick={() => onChange(!checked)}
-        className={cx('relative mt-0.5 h-6 w-11 shrink-0 rounded-full transition', checked ? 'bg-gold-500' : 'bg-white/15')}
+        className={cx('relative mt-0.5 h-6 w-11 shrink-0 rounded-full transition', checked ? 'bg-accent-500' : 'bg-white/15')}
       >
         <span className={cx('absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all', checked ? 'left-[22px]' : 'left-0.5')} />
       </button>
@@ -217,7 +217,7 @@ export function Segmented<T extends string | number>({
           className={cx(
             'rounded-xl border font-semibold transition disabled:cursor-not-allowed disabled:opacity-40',
             size === 'sm' ? 'min-w-9 px-2.5 py-1.5 text-xs' : 'px-3.5 py-2 text-sm',
-            value === o.value ? 'border-gold-500/70 bg-gold-500/15 text-gold-300' : 'border-white/10 bg-white/5 text-stone-300 hover:bg-white/10',
+            value === o.value ? 'border-accent-500/70 bg-accent-500/15 text-accent-300' : 'border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10',
           )}
         >
           {o.label}
@@ -271,7 +271,7 @@ export function NumberField({
         onBlur={commit}
         onKeyDown={(e) => e.key === 'Enter' && (e.currentTarget as HTMLInputElement).blur()}
       />
-      {suffix && <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-stone-400">{suffix}</span>}
+      {suffix && <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-zinc-400">{suffix}</span>}
     </div>
   );
 }
@@ -282,7 +282,7 @@ export function Spinner({ className }: { className?: string }) {
 
 export function Loading({ label = 'Chargement…' }: { label?: string }) {
   return (
-    <div className="flex items-center justify-center gap-3 py-16 text-stone-400">
+    <div className="flex items-center justify-center gap-3 py-16 text-zinc-400">
       <Spinner /> {label}
     </div>
   );
@@ -291,9 +291,9 @@ export function Loading({ label = 'Chargement…' }: { label?: string }) {
 export function Empty({ icon, title, children }: { icon?: ReactNode; title: string; children?: ReactNode }) {
   return (
     <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-white/10 px-6 py-12 text-center">
-      {icon && <div className="text-stone-500">{icon}</div>}
-      <p className="font-semibold text-stone-200">{title}</p>
-      {children && <div className="text-sm text-stone-400">{children}</div>}
+      {icon && <div className="text-zinc-500">{icon}</div>}
+      <p className="font-semibold text-zinc-200">{title}</p>
+      {children && <div className="text-sm text-zinc-400">{children}</div>}
     </div>
   );
 }
@@ -303,8 +303,8 @@ export function Section({ title, subtitle, children, right, className }: { title
     <section className={cx('card p-5', className)}>
       <div className="mb-4 flex items-start justify-between gap-3">
         <div>
-          <h3 className="font-bold text-stone-50">{title}</h3>
-          {subtitle && <p className="text-sm text-stone-400">{subtitle}</p>}
+          <h3 className="font-bold text-zinc-50">{title}</h3>
+          {subtitle && <p className="text-sm text-zinc-400">{subtitle}</p>}
         </div>
         {right}
       </div>
@@ -317,8 +317,8 @@ export function PageHeader({ title, subtitle, right }: { title: ReactNode; subti
   return (
     <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
       <div>
-        <h1 className="text-2xl font-extrabold tracking-tight text-stone-50">{title}</h1>
-        {subtitle && <p className="mt-1 text-sm text-stone-400">{subtitle}</p>}
+        <h1 className="text-2xl font-extrabold tracking-tight text-zinc-50">{title}</h1>
+        {subtitle && <p className="mt-1 text-sm text-zinc-400">{subtitle}</p>}
       </div>
       {right && <div className="flex flex-wrap gap-2">{right}</div>}
     </div>

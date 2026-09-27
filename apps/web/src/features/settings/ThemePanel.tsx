@@ -50,7 +50,7 @@ export function ThemePanel({ snap }: { snap: TournamentSnapshot }) {
               <span className="title-color text-sm font-black uppercase">{t.title}</span>
             </div>
             <div className="glass rounded-xl p-3 text-center">
-              <p className="text-[9px] font-bold uppercase tracking-widest text-stone-300">Temps restant</p>
+              <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-300">Temps restant</p>
               <p className="title-color text-4xl font-black tabular">18:42</p>
               <div className="mx-auto mt-2 h-1.5 w-4/5 overflow-hidden rounded-full bg-white/10">
                 <div className="h-full w-2/5" style={{ background: 'var(--c-secondary)' }} />
@@ -93,7 +93,7 @@ function ColorField({ label, hint, value, onChange }: { label: string; hint: str
         />
         <input className="input font-mono uppercase" value={v} onChange={(e) => setV(e.target.value)} onBlur={() => /^#[0-9a-f]{6}$/i.test(v) && v !== value && onChange(v)} />
       </div>
-      <p className="mt-1 text-xs text-stone-500">{hint}</p>
+      <p className="mt-1 text-xs text-zinc-500">{hint}</p>
     </div>
   );
 }
@@ -104,9 +104,9 @@ function RangeField({ label, value, min, max, step, display, onCommit }: { label
     <div>
       <label className="label flex justify-between">
         <span>{label}</span>
-        <span className="text-stone-300">{display(v)}</span>
+        <span className="text-zinc-300">{display(v)}</span>
       </label>
-      <input type="range" className="w-full accent-[#c9a449]" min={min} max={max} step={step} value={v} onChange={(e) => setV(Number(e.target.value))} onPointerUp={() => onCommit(v)} onKeyUp={() => onCommit(v)} />
+      <input type="range" className="w-full accent-[#4ea486]" min={min} max={max} step={step} value={v} onChange={(e) => setV(Number(e.target.value))} onPointerUp={() => onCommit(v)} onKeyUp={() => onCommit(v)} />
     </div>
   );
 }
@@ -145,21 +145,21 @@ function AssetDrop({ label, kind, value, onChange }: { label: string; kind: 'log
           void upload(e.dataTransfer.files[0]);
         }}
         onClick={() => input.current?.click()}
-        className={cx('flex h-32 cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed text-sm', over ? 'border-gold-400 bg-gold-500/10' : 'border-white/15 bg-white/5 hover:bg-white/10')}
+        className={cx('flex h-32 cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed text-sm', over ? 'border-accent-400 bg-accent-500/10' : 'border-white/15 bg-white/5 hover:bg-white/10')}
       >
         {value ? (
           <img src={assetUrl(value)!} alt="" className={cx('max-h-24 max-w-full rounded', kind === 'background' && 'w-full object-cover')} />
         ) : (
           <>
-            <ImagePlus className="text-stone-400" />
-            <span className="text-stone-400">{busy ? 'Import en cours…' : 'Importer une image (ou glisser-déposer)'}</span>
-            <span className="text-xs text-stone-500">PNG, JPG, SVG ou WebP · 2 Mo max</span>
+            <ImagePlus className="text-zinc-400" />
+            <span className="text-zinc-400">{busy ? 'Import en cours…' : 'Importer une image (ou glisser-déposer)'}</span>
+            <span className="text-xs text-zinc-500">PNG, JPG, SVG ou WebP · 2 Mo max</span>
           </>
         )}
       </div>
       <input ref={input} type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" className="hidden" onChange={(e) => upload(e.target.files?.[0])} />
       {value && (
-        <button className="mt-2 text-xs text-stone-400 hover:text-red-300" onClick={() => onChange(null)}>
+        <button className="mt-2 text-xs text-zinc-400 hover:text-red-300" onClick={() => onChange(null)}>
           {kind === 'logo' ? 'Revenir au logo par défaut' : 'Revenir au fond par défaut'}
         </button>
       )}
@@ -198,7 +198,7 @@ function SoundsSection({ snap }: { snap: TournamentSnapshot }) {
             <span>Volume</span>
             <span>{Math.round(device.volume * 100)} %</span>
           </label>
-          <input type="range" className="w-full accent-[#c9a449]" min={0} max={1} step={0.05} value={device.volume} onChange={(e) => setDevice({ volume: Number(e.target.value) })} />
+          <input type="range" className="w-full accent-[#4ea486]" min={0} max={1} step={0.05} value={device.volume} onChange={(e) => setDevice({ volume: Number(e.target.value) })} />
         </div>
         <div className="divide-y divide-white/5 rounded-xl bg-white/5">
           {SOUND_ROWS.map((r) => {
@@ -217,7 +217,7 @@ function SoundsSection({ snap }: { snap: TournamentSnapshot }) {
                   <input type="file" accept="audio/mpeg,audio/wav,audio/x-wav,audio/mp4,audio/x-m4a" className="hidden" onChange={(e) => upload(r.key, e.target.files?.[0])} />
                 </label>
                 {custom && (
-                  <button className="rounded-lg p-1.5 text-stone-400 hover:text-red-300" title="Revenir au son par défaut" onClick={() => save({ theme: { sounds: { ...t.theme.sounds, [r.key]: null } } })}>
+                  <button className="rounded-lg p-1.5 text-zinc-400 hover:text-red-300" title="Revenir au son par défaut" onClick={() => save({ theme: { sounds: { ...t.theme.sounds, [r.key]: null } } })}>
                     <Trash2 size={14} />
                   </button>
                 )}

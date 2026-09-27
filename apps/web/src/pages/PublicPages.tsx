@@ -11,8 +11,8 @@ function PublicFrame({ children }: { children: React.ReactNode }) {
   return (
     <div className="bg-felt min-h-screen">
       <div className="mx-auto max-w-5xl px-4 py-8">{children}</div>
-      <p className="pb-6 text-center text-xs text-stone-500 no-print">
-        Organisé avec Poker<span className="text-gold-500">Orga</span>
+      <p className="pb-6 text-center text-xs text-zinc-500 no-print">
+        Organisé avec Poker<span className="text-accent-500">Orga</span>
       </p>
     </div>
   );
@@ -58,7 +58,7 @@ export function PublicPlanPage() {
           {d.logoAssetId && <img src={assetUrl(d.logoAssetId)!} alt="Logo organisateur" className="h-12 max-w-[160px] object-contain" />}
           <div>
             <h1 className="text-2xl font-black">Plan des tables — {d.title}</h1>
-            <p className="text-sm text-stone-400">
+            <p className="text-sm text-zinc-400">
               {d.stats.activePlayers} joueurs en lice · {d.tables.length} table(s)
             </p>
           </div>
@@ -86,14 +86,14 @@ export function PublicPlanPage() {
         <>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {shown.map((t) => (
-              <div key={t.number} className={cx('card p-4', t.isFinal && 'border-gold-500/60')}>
+              <div key={t.number} className={cx('card p-4', t.isFinal && 'border-accent-500/60')}>
                 <h2 className="mb-3 text-lg font-black">{t.isFinal ? '🏆 Table finale' : `Table ${t.number}`}</h2>
                 <ul className="space-y-1">
                   {Array.from({ length: d.maxPerTable }, (_, i) => i + 1).map((s) => {
                     const p = t.seats.find((x) => x.seat === s);
                     return (
-                      <li key={s} className={cx('flex gap-3 rounded-lg px-3 py-1.5 text-sm', p ? 'bg-white/5' : 'text-stone-600')}>
-                        <span className="w-14 font-bold text-stone-400">Siège {s}</span>
+                      <li key={s} className={cx('flex gap-3 rounded-lg px-3 py-1.5 text-sm', p ? 'bg-white/5' : 'text-zinc-600')}>
+                        <span className="w-14 font-bold text-zinc-400">Siège {s}</span>
                         <span className="font-semibold">{p?.pseudo ?? 'Libre'}</span>
                       </li>
                     );
@@ -105,7 +105,7 @@ export function PublicPlanPage() {
           {pages > 1 && (
             <div className="mt-4 flex items-center justify-center gap-2 no-print" aria-label="Pagination des tables">
               {Array.from({ length: pages }, (_, i) => (
-                <button key={i} onClick={() => setPage(i)} className={cx('h-2.5 w-2.5 rounded-full', i === page ? 'bg-gold-500' : 'bg-white/20')} aria-label={`Page ${i + 1}`} />
+                <button key={i} onClick={() => setPage(i)} className={cx('h-2.5 w-2.5 rounded-full', i === page ? 'bg-accent-500' : 'bg-white/20')} aria-label={`Page ${i + 1}`} />
               ))}
             </div>
           )}
@@ -115,7 +115,7 @@ export function PublicPlanPage() {
           {all.map((p) => (
             <p key={p.pseudo} className="flex break-inside-avoid justify-between border-b border-white/5 py-1.5 text-sm">
               <span className="font-semibold">{p.pseudo}</span>
-              <span className="tabular text-stone-400">
+              <span className="tabular text-zinc-400">
                 T{p.table} · S{p.seat}
               </span>
             </p>
@@ -149,7 +149,7 @@ export function PublicRankingPage() {
       <div className="mb-6 text-center">
         {d.organizer && <p className="eyebrow">{d.organizer}</p>}
         <h1 className="text-3xl font-black">{d.name}</h1>
-        <p className="text-sm text-stone-400">
+        <p className="text-sm text-zinc-400">
           {d.imports} tournoi(s) · {d.bestResults ? `${d.bestResults} meilleurs résultats retenus (jokers)` : 'Tous les résultats comptent'}
         </p>
       </div>
@@ -162,10 +162,10 @@ export function PublicRankingPage() {
           <div className="mb-6 grid grid-cols-3 items-end gap-3">
             {[podium[1], podium[0], podium[2]].map((p, i) =>
               p ? (
-                <div key={p.id} className={cx('card p-4 text-center', i === 1 && 'border-gold-500/60 pb-8')}>
+                <div key={p.id} className={cx('card p-4 text-center', i === 1 && 'border-accent-500/60 pb-8')}>
                   <p className="text-3xl">{['🥈', '🥇', '🥉'][i]}</p>
                   <p className="mt-1 truncate font-bold">{p.name}</p>
-                  <p className="text-sm text-gold-300">{p.points} pts</p>
+                  <p className="text-sm text-accent-300">{p.points} pts</p>
                 </div>
               ) : (
                 <div key={i} />
@@ -173,7 +173,7 @@ export function PublicRankingPage() {
             )}
           </div>
           <div className="card p-5">
-            <p className="mb-3 text-xs text-stone-400">Touchez un joueur pour voir les tournois et les bonus.</p>
+            <p className="mb-3 text-xs text-zinc-400">Touchez un joueur pour voir les tournois et les bonus.</p>
             <RankingList ranking={d.ranking} onPick={setPick} />
           </div>
         </>
@@ -240,7 +240,7 @@ export function PublicRegisterPage() {
         <div className="card p-6">
           {e.organizer && <p className="eyebrow">{e.organizer}</p>}
           <h1 className="mt-1 text-3xl font-black">{e.name}</h1>
-          <div className="mt-3 flex flex-wrap gap-4 text-sm text-stone-300">
+          <div className="mt-3 flex flex-wrap gap-4 text-sm text-zinc-300">
             <span className="flex items-center gap-1.5">
               <CalendarDays size={15} /> {e.eventDate ? fmtDate(e.eventDate) : 'Date à définir'}
               {e.eventTime ? ` · ${e.eventTime}` : ''}
@@ -260,17 +260,17 @@ export function PublicRegisterPage() {
             <span className="chip">Stack {e.startStack.toLocaleString('fr-FR')}</span>
             <span className="chip">{e.financialMode === 'money' ? `Buy-in ${formatMoney(e.buyin)}` : e.financialMode === 'lots' ? 'Dotation en lots' : 'Gratuit'}</span>
           </div>
-          {e.description && <p className="mt-4 whitespace-pre-line text-sm text-stone-300">{e.description}</p>}
+          {e.description && <p className="mt-4 whitespace-pre-line text-sm text-zinc-300">{e.description}</p>}
         </div>
 
         <div className="card p-6">
           {done ? (
             <div className="py-6 text-center">
               <p className="text-2xl font-black">{done === 'waitlist' ? "Vous êtes sur liste d'attente" : 'Inscription enregistrée.'}</p>
-              <p className="mt-2 text-sm text-stone-400">{done === 'waitlist' ? "L'organisateur vous contactera si une place se libère." : "L'organisateur doit encore valider votre inscription."}</p>
+              <p className="mt-2 text-sm text-zinc-400">{done === 'waitlist' ? "L'organisateur vous contactera si une place se libère." : "L'organisateur doit encore valider votre inscription."}</p>
             </div>
           ) : e.status !== 'open' ? (
-            <p className="py-6 text-center font-semibold text-stone-300">Les inscriptions sont closes.</p>
+            <p className="py-6 text-center font-semibold text-zinc-300">Les inscriptions sont closes.</p>
           ) : (
             <form onSubmit={submit} className="space-y-4">
               <h2 className="text-lg font-bold">S'inscrire</h2>
@@ -295,10 +295,10 @@ export function PublicRegisterPage() {
               </div>
               {e.options.map((o) => (
                 <div key={o.id}>
-                  <label className="label !normal-case !tracking-normal !text-sm !text-stone-200">{o.label}</label>
+                  <label className="label !normal-case !tracking-normal !text-sm !text-zinc-200">{o.label}</label>
                   <div className="flex gap-2">
                     {(['yes', 'no', 'unknown'] as const).map((v) => (
-                      <button key={v} type="button" onClick={() => setAnswers({ ...answers, [o.id]: v })} className={cx('rounded-xl border px-3 py-1.5 text-sm font-semibold', answers[o.id] === v ? 'border-gold-500 bg-gold-500/15 text-gold-300' : 'border-white/10 bg-white/5')}>
+                      <button key={v} type="button" onClick={() => setAnswers({ ...answers, [o.id]: v })} className={cx('rounded-xl border px-3 py-1.5 text-sm font-semibold', answers[o.id] === v ? 'border-accent-500 bg-accent-500/15 text-accent-300' : 'border-white/10 bg-white/5')}>
                         {{ yes: 'Oui', no: 'Non', unknown: 'Ne sais pas' }[v]}
                       </button>
                     ))}
@@ -322,7 +322,7 @@ export function PublicRegisterPage() {
                 </span>
               ))}
             </div>
-            {e.waitlist > 0 && <p className="mt-3 text-xs text-stone-400">{e.waitlist} personne(s) en liste d'attente.</p>}
+            {e.waitlist > 0 && <p className="mt-3 text-xs text-zinc-400">{e.waitlist} personne(s) en liste d'attente.</p>}
           </div>
         )}
       </div>

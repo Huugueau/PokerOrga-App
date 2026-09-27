@@ -39,11 +39,11 @@ export function HistoryPage() {
             <Link key={h.id} to={`/history/${h.id}`} className="flex flex-wrap items-center gap-4 px-5 py-4 hover:bg-white/5">
               <div className="min-w-48 flex-1">
                 <p className="font-bold">{h.title}</p>
-                <p className="text-xs text-stone-400">{fmtDate(h.startedAt ?? h.finishedAt, true)}</p>
+                <p className="text-xs text-zinc-400">{fmtDate(h.startedAt ?? h.finishedAt, true)}</p>
               </div>
-              <span className="text-sm text-stone-300">{h.entries} entrées</span>
-              <span className="text-sm text-stone-300">{formatMoney(h.prizePool)}</span>
-              <span className="flex items-center gap-1 text-sm text-gold-300">
+              <span className="text-sm text-zinc-300">{h.entries} entrées</span>
+              <span className="text-sm text-zinc-300">{formatMoney(h.prizePool)}</span>
+              <span className="flex items-center gap-1 text-sm text-accent-300">
                 <Trophy size={14} /> {h.winner ?? '—'}
               </span>
               {h.exportedChampionshipIds.length > 0 && <span className="chip">Exporté</span>}
@@ -70,7 +70,7 @@ export function HistoryDetailPage() {
   const durationMin = t.startedAt && t.finishedAt ? Math.round((+new Date(t.finishedAt) - +new Date(t.startedAt)) / 60000) : null;
   return (
     <>
-      <Link to="/history" className="mb-4 inline-flex items-center gap-1 text-sm text-stone-400 hover:text-white">
+      <Link to="/history" className="mb-4 inline-flex items-center gap-1 text-sm text-zinc-400 hover:text-white">
         <ArrowLeft size={14} /> Historique
       </Link>
       <PageHeader

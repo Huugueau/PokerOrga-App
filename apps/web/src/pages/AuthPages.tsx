@@ -44,21 +44,21 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
         <div className="mb-5 flex flex-col items-center gap-2">
           <img src="/favicon.svg" alt="" className="h-14 w-14" />
           <p className="text-2xl font-black">
-            Poker<span className="text-gold-500">Orga</span>
+            Poker<span className="text-accent-500">Orga</span>
           </p>
         </div>
         <div className="mb-5 grid grid-cols-2 gap-1 rounded-xl bg-ink-950/60 p-1">
-          <Link to="/login" className={cx('rounded-lg py-2 text-center text-sm font-semibold', mode === 'login' ? 'bg-gold-500 text-ink-950' : 'text-stone-300')}>
+          <Link to="/login" className={cx('rounded-lg py-2 text-center text-sm font-semibold', mode === 'login' ? 'bg-accent-500 text-ink-950' : 'text-zinc-300')}>
             Connexion
           </Link>
           {cfg.data?.allowRegistration !== false && (
-            <Link to="/register" className={cx('rounded-lg py-2 text-center text-sm font-semibold', mode === 'register' ? 'bg-gold-500 text-ink-950' : 'text-stone-300')}>
+            <Link to="/register" className={cx('rounded-lg py-2 text-center text-sm font-semibold', mode === 'register' ? 'bg-accent-500 text-ink-950' : 'text-zinc-300')}>
               Inscription
             </Link>
           )}
         </div>
         <h1 className="text-center text-lg font-bold">{mode === 'login' ? 'Connexion' : 'Créer un compte'}</h1>
-        <p className="mb-5 text-center text-sm text-stone-400">{mode === 'login' ? 'Connectez-vous pour lancer votre timer.' : 'Inscrivez-vous pour organiser vos tournois.'}</p>
+        <p className="mb-5 text-center text-sm text-zinc-400">{mode === 'login' ? 'Connectez-vous pour lancer votre timer.' : 'Inscrivez-vous pour organiser vos tournois.'}</p>
         <form onSubmit={submit} className="space-y-4">
           <div>
             <label className="label">Email *</label>
@@ -68,14 +68,14 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
             <label className="label">Mot de passe *</label>
             <div className="relative">
               <input className="input pr-10" type={show ? 'text' : 'password'} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} />
-              <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400" onClick={() => setShow(!show)} aria-label={show ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}>
+              <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400" onClick={() => setShow(!show)} aria-label={show ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}>
                 {show ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
           </div>
           {mode === 'register' && (
-            <label className="flex items-start gap-2 text-sm text-stone-300">
-              <input type="checkbox" className="mt-1 accent-[#c9a449]" checked={terms} onChange={(e) => setTerms(e.target.checked)} />
+            <label className="flex items-start gap-2 text-sm text-zinc-300">
+              <input type="checkbox" className="mt-1 accent-[#4ea486]" checked={terms} onChange={(e) => setTerms(e.target.checked)} />
               J'accepte les conditions d'utilisation de cette instance PokerOrga.
             </label>
           )}
@@ -84,16 +84,16 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
             {busy ? 'Patientez...' : mode === 'login' ? 'Se connecter →' : "S'inscrire →"}
           </button>
         </form>
-        <p className="mt-5 text-center text-sm text-stone-400">
+        <p className="mt-5 text-center text-sm text-zinc-400">
           {mode === 'login' ? (
             cfg.data?.allowRegistration !== false && (
               <>
-                Pas encore de compte ? <Link to="/register" className="text-gold-400">S'inscrire</Link>
+                Pas encore de compte ? <Link to="/register" className="text-accent-400">S'inscrire</Link>
               </>
             )
           ) : (
             <>
-              Déjà un compte ? <Link to="/login" className="text-gold-400">Se connecter</Link>
+              Déjà un compte ? <Link to="/login" className="text-accent-400">Se connecter</Link>
             </>
           )}
         </p>

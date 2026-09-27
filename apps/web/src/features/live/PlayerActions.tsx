@@ -35,18 +35,18 @@ export function PlayerPicker({
   return (
     <div className="space-y-3">
       <div className="relative">
-        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-500" />
+        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
         <input className="input pl-9" placeholder="Rechercher un joueur..." value={q} onChange={(e) => setQ(e.target.value)} data-autofocus />
       </div>
       {extra}
       <div className="grid max-h-[50vh] grid-cols-1 gap-1.5 overflow-y-auto sm:grid-cols-2">
         {list.map((p) => (
-          <button key={p.id} className="flex items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-left hover:border-gold-500/50 hover:bg-gold-500/10" onClick={() => onPick(p)}>
+          <button key={p.id} className="flex items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-left hover:border-accent-500/50 hover:bg-accent-500/10" onClick={() => onPick(p)}>
             <span className="truncate font-semibold">{p.pseudo}</span>
-            <span className="shrink-0 text-xs text-stone-400">{seatLabel(p)}</span>
+            <span className="shrink-0 text-xs text-zinc-400">{seatLabel(p)}</span>
           </button>
         ))}
-        {list.length === 0 && <p className="col-span-full py-6 text-center text-sm text-stone-400">{q ? `Aucun joueur trouvé pour « ${q} »` : empty}</p>}
+        {list.length === 0 && <p className="col-span-full py-6 text-center text-sm text-zinc-400">{q ? `Aucun joueur trouvé pour « ${q} »` : empty}</p>}
       </div>
     </div>
   );
@@ -112,10 +112,10 @@ export function BustFlow({ snap, open, onClose, lateRegOpen }: { snap: Tournamen
     body = (
       <div className="space-y-4 py-2 text-center">
         {result.envelope != null && (
-          <div className="animate-pop mx-auto flex w-56 flex-col items-center gap-2 rounded-2xl border border-gold-500/50 bg-gold-500/10 p-6">
-            <Gift className="text-gold-400" size={40} />
+          <div className="animate-pop mx-auto flex w-56 flex-col items-center gap-2 rounded-2xl border border-accent-500/50 bg-accent-500/10 p-6">
+            <Gift className="text-accent-400" size={40} />
             <p className="eyebrow">Enveloppe Mystery</p>
-            <p className="text-4xl font-black text-gold-300">{t.payouts.type === 'lots' || t.settings.isFree ? `${result.envelope} pts` : formatMoney(result.envelope)}</p>
+            <p className="text-4xl font-black text-accent-300">{t.payouts.type === 'lots' || t.settings.isFree ? `${result.envelope} pts` : formatMoney(result.envelope)}</p>
           </div>
         )}
         {result.lines.map((l) => (
@@ -288,11 +288,11 @@ export function MoveModal({ snap, onClose, initial }: { snap: TournamentSnapshot
                     title={occ ? `Inverser avec ${occ.pseudo}` : 'Siège libre'}
                     className={cx(
                       'flex h-14 flex-col items-center justify-center rounded-lg border text-[11px] leading-tight',
-                      me ? 'border-gold-500 bg-gold-500/20 text-gold-200' : occ ? 'border-white/10 bg-ink-950/50 hover:border-sky-400/60' : 'border-emerald-400/30 bg-emerald-500/10 hover:bg-emerald-500/20',
+                      me ? 'border-accent-500 bg-accent-500/20 text-accent-200' : occ ? 'border-white/10 bg-ink-950/50 hover:border-sky-400/60' : 'border-emerald-400/30 bg-emerald-500/10 hover:bg-emerald-500/20',
                     )}
                   >
                     <span className="font-bold">S{s}</span>
-                    <span className="w-full truncate px-1 text-center text-stone-300">{me ? 'Vous êtes ici' : occ ? occ.pseudo : 'Libre'}</span>
+                    <span className="w-full truncate px-1 text-center text-zinc-300">{me ? 'Vous êtes ici' : occ ? occ.pseudo : 'Libre'}</span>
                   </button>
                 );
               })}
@@ -300,7 +300,7 @@ export function MoveModal({ snap, onClose, initial }: { snap: TournamentSnapshot
           </div>
         ))}
       </div>
-      <p className="mt-3 text-xs text-stone-400">Cliquez un siège libre pour déplacer, ou un siège occupé pour inverser les places.</p>
+      <p className="mt-3 text-xs text-zinc-400">Cliquez un siège libre pour déplacer, ou un siège occupé pour inverser les places.</p>
     </Modal>
   );
 }

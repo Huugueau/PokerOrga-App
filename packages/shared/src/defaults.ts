@@ -72,9 +72,9 @@ export function defaultStructure(): Level[] {
 export const DEFAULT_PAYOUTS: PayoutConfig = { mode: 'auto', type: 'money', amounts: [], lots: [] };
 
 export const DEFAULT_THEME: ThemeConfig = {
-  primary: '#13233a',
-  secondary: '#c9a449',
-  title: '#f5f5f4',
+  primary: '#1a1f26',
+  secondary: '#4ea486',
+  title: '#f4f4f5',
   glassOpacity: 0.55,
   glassBlur: 12,
   font: 'Inter',

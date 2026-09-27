@@ -22,7 +22,7 @@ export function RankingTable({ snap, compact }: { snap: TournamentSnapshot; comp
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
-          <tr className="text-left text-xs uppercase tracking-wider text-stone-400">
+          <tr className="text-left text-xs uppercase tracking-wider text-zinc-400">
             <th className="py-2 pr-2">Place</th>
             <th className="py-2 pr-2">Joueur</th>
             {!compact && <th className="py-2 pr-2">Entrées</th>}
@@ -34,15 +34,15 @@ export function RankingTable({ snap, compact }: { snap: TournamentSnapshot; comp
         </thead>
         <tbody>
           {list.map((p) => (
-            <tr key={p.id} className={cx('border-t border-white/5', p.finishRank === 1 && 'text-gold-300')}>
+            <tr key={p.id} className={cx('border-t border-white/5', p.finishRank === 1 && 'text-accent-300')}>
               <td className="py-2 pr-2 font-bold tabular">{p.finishRank ?? '—'}</td>
               <td className="py-2 pr-2 font-semibold">
-                {p.finishRank === 1 && <Trophy size={14} className="mr-1 inline text-gold-400" />}
+                {p.finishRank === 1 && <Trophy size={14} className="mr-1 inline text-accent-400" />}
                 {p.pseudo}
               </td>
               {!compact && <td className="py-2 pr-2 tabular">{p.entries + p.rebuys}</td>}
               <td className="py-2 pr-2 tabular">{p.kills}</td>
-              {!compact && <td className="py-2 pr-2 text-stone-400">{p.eliminatedBy ? byId.get(p.eliminatedBy) : ''}</td>}
+              {!compact && <td className="py-2 pr-2 text-zinc-400">{p.eliminatedBy ? byId.get(p.eliminatedBy) : ''}</td>}
               {showBounty && <td className="py-2 pr-2 tabular">{p.bountyWon ? (pts ? `${p.bountyWon} pts` : formatMoney(p.bountyWon)) : ''}</td>}
               <td className="py-2 text-right font-semibold tabular">{p.prizeLabel ?? (p.prizeAmount ? formatMoney(p.prizeAmount) : '')}</td>
             </tr>
@@ -76,8 +76,8 @@ export function SendToChampionship({ tournamentId, exported, disabled }: { tourn
   };
   if (champs.data && champs.data.items.length === 0) {
     return (
-      <p className="text-sm text-stone-400">
-        Aucun championnat. <Link className="text-gold-400 underline" to="/championships">Créez-en un</Link> pour y envoyer ce tournoi.
+      <p className="text-sm text-zinc-400">
+        Aucun championnat. <Link className="text-accent-400 underline" to="/championships">Créez-en un</Link> pour y envoyer ce tournoi.
       </p>
     );
   }
@@ -124,7 +124,7 @@ export function ResultsModal({ snap, onClose, onFinish }: { snap: TournamentSnap
       }
     >
       <div className="space-y-5">
-        {done && <p className="text-sm text-stone-300">Vous pouvez maintenant envoyer les résultats vers un de vos championnats.</p>}
+        {done && <p className="text-sm text-zinc-300">Vous pouvez maintenant envoyer les résultats vers un de vos championnats.</p>}
         {done && <SendToChampionship tournamentId={snap.tournament.id} exported={snap.tournament.exportedChampionshipIds} />}
         <RankingTable snap={snap} />
       </div>

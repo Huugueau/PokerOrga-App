@@ -83,9 +83,9 @@ export function PlayersPanel({ snap, lateRegOpen }: { snap: TournamentSnapshot; 
           </div>
         }
       >
-        <p className="mb-4 text-xs text-stone-400">
+        <p className="mb-4 text-xs text-zinc-400">
           Import : CSV ou TXT uniquement (pas de .xlsx). Une ligne par joueur. Prénom et nom facultatifs.{' '}
-          <button className="text-gold-400 underline" onClick={() => downloadText('modele-joueurs.csv', PLAYER_CSV_TEMPLATE)}>
+          <button className="text-accent-400 underline" onClick={() => downloadText('modele-joueurs.csv', PLAYER_CSV_TEMPLATE)}>
             Modèle CSV
           </button>
         </p>
@@ -138,7 +138,7 @@ export function PlayersPanel({ snap, lateRegOpen }: { snap: TournamentSnapshot; 
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-left text-xs uppercase tracking-wider text-stone-400">
+                  <tr className="text-left text-xs uppercase tracking-wider text-zinc-400">
                     <th className="py-2 pr-2">Joueur</th>
                     <th className="py-2 pr-2">Place</th>
                     <th className="py-2 pr-2">Entrées</th>
@@ -193,7 +193,7 @@ export function PlayersPanel({ snap, lateRegOpen }: { snap: TournamentSnapshot; 
             {importRows.map((r) => (
               <span key={r.pseudo} className="chip">
                 {r.pseudo}
-                {r.firstName || r.lastName ? <span className="text-stone-500"> · {[r.firstName, r.lastName].filter(Boolean).join(' ')}</span> : null}
+                {r.firstName || r.lastName ? <span className="text-zinc-500"> · {[r.firstName, r.lastName].filter(Boolean).join(' ')}</span> : null}
               </span>
             ))}
           </div>
@@ -233,16 +233,16 @@ function PlayerRowView({ snap, p, lateRegOpen, onEdit, onMove }: { snap: Tournam
     },
   ];
   return (
-    <tr className={cx('border-t border-white/5', eliminated && 'text-stone-500')}>
+    <tr className={cx('border-t border-white/5', eliminated && 'text-zinc-500')}>
       <td className="py-2 pr-2">
-        <span className="font-semibold text-stone-100">{p.pseudo}</span>
-        {(p.firstName || p.lastName) && <span className="ml-2 text-xs text-stone-500">{[p.firstName, p.lastName].filter(Boolean).join(' ')}</span>}
+        <span className="font-semibold text-zinc-100">{p.pseudo}</span>
+        {(p.firstName || p.lastName) && <span className="ml-2 text-xs text-zinc-500">{[p.firstName, p.lastName].filter(Boolean).join(' ')}</span>}
         {p.registrationId && <span className={cx('ml-2 chip text-[10px]', p.present && 'border-emerald-400/40 text-emerald-300')}>{p.present ? '✓ Présent' : 'Préinscrit'}</span>}
       </td>
       <td className="py-2 pr-2 tabular">
         {p.tableNumber != null ? (
           <span className="flex items-center gap-1">
-            T{p.tableNumber} · S{p.seatNumber} {p.seatLocked && <Lock size={12} className="text-gold-400" />}
+            T{p.tableNumber} · S{p.seatNumber} {p.seatLocked && <Lock size={12} className="text-accent-400" />}
           </span>
         ) : (
           '—'
@@ -256,7 +256,7 @@ function PlayerRowView({ snap, p, lateRegOpen, onEdit, onMove }: { snap: Tournam
         {eliminated ? (
           <span className="chip">{p.finishRank ? `${p.finishRank}e` : 'Éliminé'}</span>
         ) : p.finishRank === 1 ? (
-          <span className="chip border-gold-500/50 text-gold-300">
+          <span className="chip border-accent-500/50 text-accent-300">
             <Trophy size={12} /> Vainqueur
           </span>
         ) : (
@@ -276,7 +276,7 @@ function PlayerRowView({ snap, p, lateRegOpen, onEdit, onMove }: { snap: Tournam
                 .map((i) => (
                   <button
                     key={i.label}
-                    className={cx('block w-full px-3 py-2 text-left text-sm hover:bg-white/10', i.danger ? 'text-red-300' : 'text-stone-200')}
+                    className={cx('block w-full px-3 py-2 text-left text-sm hover:bg-white/10', i.danger ? 'text-red-300' : 'text-zinc-200')}
                     onClick={() => {
                       setMenu(false);
                       i.onClick();
@@ -310,17 +310,17 @@ function TablesView({ snap, onMove }: { snap: TournamentSnapshot; onMove: (p: Pl
       {snap.tables.map((tb) => {
         const players = snap.players.filter((p) => p.status === 'active' && p.tableNumber === tb.number);
         return (
-          <div key={tb.id} className={cx('card p-4', tb.isFinal && 'border-gold-500/50')}>
+          <div key={tb.id} className={cx('card p-4', tb.isFinal && 'border-accent-500/50')}>
             <div className="mb-3 flex items-center justify-between gap-2">
               <h4 className="font-bold">
-                {tb.isFinal ? 'Table finale' : `Table ${tb.number}`} <span className="text-sm font-normal text-stone-400">· {players.length}/{max}</span>
+                {tb.isFinal ? 'Table finale' : `Table ${tb.number}`} <span className="text-sm font-normal text-zinc-400">· {players.length}/{max}</span>
               </h4>
               <div className="flex gap-1">
                 <button className="btn-ghost btn-sm" title={tb.locked ? 'Déverrouiller la table' : 'Verrouiller la table'} onClick={() => run(() => api.patch(`/tournaments/${t.id}/tables/${tb.number}`, { locked: !tb.locked }))}>
-                  {tb.locked ? <Lock size={14} className="text-gold-400" /> : <LockOpen size={14} />}
+                  {tb.locked ? <Lock size={14} className="text-accent-400" /> : <LockOpen size={14} />}
                 </button>
                 <button className="btn-ghost btn-sm" title={tb.isFinal ? 'Déverrouiller la table finale' : 'Verrouiller comme table finale'} onClick={() => run(() => api.patch(`/tournaments/${t.id}/tables/${tb.number}`, { isFinal: !tb.isFinal }))}>
-                  <Trophy size={14} className={tb.isFinal ? 'text-gold-400' : ''} />
+                  <Trophy size={14} className={tb.isFinal ? 'text-accent-400' : ''} />
                 </button>
                 {players.length === 0 && (
                   <button
@@ -343,12 +343,12 @@ function TablesView({ snap, onMove }: { snap: TournamentSnapshot; onMove: (p: Pl
                     key={s}
                     disabled={!p}
                     onClick={() => p && onMove(p)}
-                    className={cx('flex items-center gap-2 rounded-lg border px-2.5 py-2 text-left text-sm', p ? 'border-white/10 bg-white/5 hover:border-gold-500/40' : 'border-dashed border-white/10 text-stone-600')}
+                    className={cx('flex items-center gap-2 rounded-lg border px-2.5 py-2 text-left text-sm', p ? 'border-white/10 bg-white/5 hover:border-accent-500/40' : 'border-dashed border-white/10 text-zinc-600')}
                   >
-                    <span className="w-6 text-xs font-bold text-stone-400">S{s}</span>
+                    <span className="w-6 text-xs font-bold text-zinc-400">S{s}</span>
                     <span className="flex-1 truncate font-semibold">{p ? p.pseudo : 'Libre'}</span>
-                    {p?.seatLocked && <Lock size={12} className="text-gold-400" />}
-                    {p && <ArrowLeftRight size={12} className="text-stone-500" />}
+                    {p?.seatLocked && <Lock size={12} className="text-accent-400" />}
+                    {p && <ArrowLeftRight size={12} className="text-zinc-500" />}
                   </button>
                 );
               })}

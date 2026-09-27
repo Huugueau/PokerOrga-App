@@ -91,12 +91,12 @@ export function GeneralPanel({ snap }: { snap: TournamentSnapshot }) {
                 ]}
               />
               {s.reentryLimit > 3 && <NumberField className="w-24" value={s.reentryLimit} min={1} max={100} onCommit={(v) => set({ reentryLimit: v ?? 1 })} />}
-              <span className="text-stone-400">Le re-entry est autorisé jusqu'à la fin de la late registration.</span>
+              <span className="text-zinc-400">Le re-entry est autorisé jusqu'à la fin de la late registration.</span>
             </div>
           )}
           {s.entryFormat === 'rebuys' && (
             <div className="space-y-3">
-              <p className="text-stone-300">Recave au prix du buy-in, stack de départ ajouté. Possible jusqu'à la fin de la late registration.</p>
+              <p className="text-zinc-300">Recave au prix du buy-in, stack de départ ajouté. Possible jusqu'à la fin de la late registration.</p>
               <Toggle checked={s.addonsEnabled} onChange={(v) => set({ addonsEnabled: v })} label="Activer les add-ons" hint="Un add-on par joueur" />
               {s.addonsEnabled && (
                 <div className="grid max-w-md grid-cols-2 gap-3">
@@ -163,7 +163,7 @@ export function GeneralPanel({ snap }: { snap: TournamentSnapshot }) {
         <Segmented<number> size="sm" value={s.maxPerTable} onChange={(v) => set({ maxPerTable: v, finalTableSize: Math.min(s.finalTableSize, v) })} options={[2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => ({ value: n, label: String(n), hint: FORMAT_LABELS[n] }))} />
         <label className="label mt-4">Nombre de joueurs en table finale</label>
         <Segmented<number> size="sm" value={s.finalTableSize} onChange={(v) => set({ finalTableSize: v })} options={[2, 3, 4, 5, 6, 7, 8, 9, 10].filter((n) => n <= s.maxPerTable).map((n) => ({ value: n, label: String(n) }))} />
-        <p className="mt-3 text-sm text-stone-400">
+        <p className="mt-3 text-sm text-zinc-400">
           À {tp.beforeFinal.n} joueurs restants, les tables seront à {tp.beforeFinal.a} vs {tp.beforeFinal.b}. À {tp.finalAt} joueurs restants, fusion en table finale.
         </p>
         <div className="mt-4 space-y-3">
@@ -220,14 +220,14 @@ function BountySection({ snap }: { snap: TournamentSnapshot }) {
           { value: 'mystery', label: 'Mystery', disabled: s.entryFormat === 'rebuys' },
         ]}
       />
-      <p className="mt-2 text-sm text-stone-400">{s.entryFormat === 'rebuys' ? 'Incompatible avec les recaves.' : hints[s.bounty.type]}</p>
+      <p className="mt-2 text-sm text-zinc-400">{s.entryFormat === 'rebuys' ? 'Incompatible avec les recaves.' : hints[s.bounty.type]}</p>
       {s.bounty.type !== 'none' && (
         <div className="mt-4 flex flex-wrap items-end gap-4">
           <div>
             <label className="label">{s.bounty.type === 'mystery' ? 'Part enveloppes par entrée' : 'Prime initiale'}</label>
             <NumberField className="w-36" value={s.bounty.amount} suffix={unit} disabled={started} max={pts ? undefined : s.buyin} onCommit={(v) => setBounty({ amount: v ?? 0 })} />
           </div>
-          {!pts && <p className="pb-2 text-sm text-stone-400">Prize pool par entrée : {formatMoney(Math.max(0, s.buyin - s.bounty.amount - s.rake))}</p>}
+          {!pts && <p className="pb-2 text-sm text-zinc-400">Prize pool par entrée : {formatMoney(Math.max(0, s.buyin - s.bounty.amount - s.rake))}</p>}
         </div>
       )}
       {s.bounty.type === 'mystery' && (
@@ -245,7 +245,7 @@ function BountySection({ snap }: { snap: TournamentSnapshot }) {
             />
             {s.bounty.drawFrom != null && <NumberField className="w-24" value={s.bounty.drawFrom} min={2} onCommit={(v) => setBounty({ drawFrom: v ?? 2 })} />}
           </div>
-          <p className="text-xs text-stone-400">Aucun tirage tant que la grille n’est pas figée. Figement automatique des enveloppes à la fin de la late registration.</p>
+          <p className="text-xs text-zinc-400">Aucun tirage tant que la grille n’est pas figée. Figement automatique des enveloppes à la fin de la late registration.</p>
           <div className="grid grid-cols-2 gap-2 text-center sm:grid-cols-5">
             <Mini label="Pool" value={`${pool} ${unit}`} />
             <Mini label="Enveloppes" value={String(m.envelopes.length)} />
@@ -275,8 +275,8 @@ function BountySection({ snap }: { snap: TournamentSnapshot }) {
           {m.envelopes.length > 0 && (
             <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-6">
               {m.envelopes.map((e) => (
-                <div key={e.id} className={cx('rounded-lg border px-2 py-1.5 text-center text-xs', e.drawn ? 'border-white/5 bg-white/5 text-stone-500 line-through' : 'border-gold-500/30 bg-gold-500/10')}>
-                  <p className="truncate text-[10px] text-stone-400">{e.group}</p>
+                <div key={e.id} className={cx('rounded-lg border px-2 py-1.5 text-center text-xs', e.drawn ? 'border-white/5 bg-white/5 text-zinc-500 line-through' : 'border-accent-500/30 bg-accent-500/10')}>
+                  <p className="truncate text-[10px] text-zinc-400">{e.group}</p>
                   <p className="font-bold tabular">
                     {e.amount} {unit}
                   </p>
@@ -313,7 +313,7 @@ function Favorites({ snap }: { snap: TournamentSnapshot }) {
     if (await save({ settings: c.settings })) toast(`Configuration « ${c.name} » chargée.`);
   };
   return (
-    <Section title="Favoris" subtitle="Mes configurations favorites" right={<Star size={18} className="text-gold-400" />}>
+    <Section title="Favoris" subtitle="Mes configurations favorites" right={<Star size={18} className="text-accent-400" />}>
       <div className="flex flex-wrap gap-2">
         <input className="input max-w-xs" placeholder="Nom de la configuration" value={name} onChange={(e) => setName(e.target.value)} maxLength={60} />
         <button className="btn-ghost" onClick={add}>
@@ -321,7 +321,7 @@ function Favorites({ snap }: { snap: TournamentSnapshot }) {
         </button>
       </div>
       <div className="mt-3 space-y-2">
-        {q.data?.items.length === 0 && <p className="text-sm text-stone-400">Aucune configuration sauvegardée pour le moment.</p>}
+        {q.data?.items.length === 0 && <p className="text-sm text-zinc-400">Aucune configuration sauvegardée pour le moment.</p>}
         {q.data?.items.map((c) => (
           <div key={c.id} className="flex flex-wrap items-center gap-2 rounded-xl bg-white/5 px-3 py-2">
             <button
@@ -348,7 +348,7 @@ function Favorites({ snap }: { snap: TournamentSnapshot }) {
               Charger
             </button>
             <button
-              className="rounded-lg p-1.5 text-stone-400 hover:bg-red-500/20 hover:text-red-300"
+              className="rounded-lg p-1.5 text-zinc-400 hover:bg-red-500/20 hover:text-red-300"
               onClick={async () => {
                 if (await confirm({ title: `Supprimer « ${c.name} » ?`, confirmLabel: 'Supprimer', danger: true })) {
                   await api.del(`/favorites/configs/${c.id}`);

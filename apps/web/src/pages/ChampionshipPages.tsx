@@ -75,12 +75,12 @@ export function ChampionshipsPage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((c) => (
-            <Link key={c.id} to={`/championships/${c.id}`} className="card block p-5 hover:border-gold-500/40">
+            <Link key={c.id} to={`/championships/${c.id}`} className="card block p-5 hover:border-accent-500/40">
               <div className="flex items-start justify-between gap-2">
                 <h3 className="font-bold">{c.name}</h3>
                 <span className="chip">{c.type.toUpperCase()}</span>
               </div>
-              <p className="mt-2 text-sm text-stone-400">
+              <p className="mt-2 text-sm text-zinc-400">
                 {c.imports ?? 0} tournoi(s) · {c.bestResults ? `${c.bestResults} meilleurs résultats` : 'Tous les résultats'}
               </p>
               {c.published && <span className="chip mt-3 border-emerald-400/30 text-emerald-300">Publié</span>}
@@ -165,7 +165,7 @@ export function RankingList({ ranking, onPick }: { ranking: RankRow[]; onPick?: 
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
-          <tr className="text-left text-xs uppercase tracking-wider text-stone-400">
+          <tr className="text-left text-xs uppercase tracking-wider text-zinc-400">
             <th className="py-2 pr-2">Pos.</th>
             <th className="py-2 pr-2">Joueur</th>
             <th className="py-2 pr-2 text-right">Points</th>
@@ -177,13 +177,13 @@ export function RankingList({ ranking, onPick }: { ranking: RankRow[]; onPick?: 
           {ranking.map((r) => (
             <tr key={r.id} className={cx('border-t border-white/5', onPick && 'cursor-pointer hover:bg-white/5', r.position <= 3 && 'font-semibold')} onClick={() => onPick?.(r)}>
               <td className="py-2 pr-2 tabular">
-                <span className={cx(r.position === 1 && 'text-gold-300')}>{r.position}</span>
+                <span className={cx(r.position === 1 && 'text-accent-300')}>{r.position}</span>
                 {r.delta != null && r.delta !== 0 && <span className={cx('ml-1.5 text-xs', r.delta > 0 ? 'text-emerald-400' : 'text-red-400')}>{r.delta > 0 ? `▲${r.delta}` : `▼${-r.delta}`}</span>}
               </td>
               <td className="py-2 pr-2">{r.name}</td>
               <td className="py-2 pr-2 text-right font-bold tabular">
                 {r.points}
-                {r.bonus !== 0 && <span className="ml-1 text-xs font-normal text-stone-400">(dont {r.bonus} bonus)</span>}
+                {r.bonus !== 0 && <span className="ml-1 text-xs font-normal text-zinc-400">(dont {r.bonus} bonus)</span>}
               </td>
               <td className="py-2 pr-2 text-right tabular">{r.kills}</td>
               <td className="py-2 text-right tabular">
@@ -203,14 +203,14 @@ export function PlayerDetail({ name, detail }: { name: string; detail: Detail })
       <div>
         <p className="eyebrow mb-2">Tournois de {name}</p>
         {detail.results.length === 0 ? (
-          <p className="text-sm text-stone-400">Aucun tournoi importé.</p>
+          <p className="text-sm text-zinc-400">Aucun tournoi importé.</p>
         ) : (
           <table className="w-full text-sm">
             <tbody>
               {detail.results.map((r) => (
-                <tr key={r.importId} className={cx('border-t border-white/5', (r.cancelled || !r.retained) && 'text-stone-500')}>
+                <tr key={r.importId} className={cx('border-t border-white/5', (r.cancelled || !r.retained) && 'text-zinc-500')}>
                   <td className="py-1.5">{r.tournamentName}</td>
-                  <td className="py-1.5 text-stone-400">{fmtDate(r.playedAt)}</td>
+                  <td className="py-1.5 text-zinc-400">{fmtDate(r.playedAt)}</td>
                   <td className="py-1.5 tabular">
                     {r.rank}/{r.entries}
                   </td>
@@ -270,7 +270,7 @@ export function ChampionshipDetailPage() {
 
   return (
     <>
-      <Link to="/championships" className="mb-4 inline-flex items-center gap-1 text-sm text-stone-400 hover:text-white">
+      <Link to="/championships" className="mb-4 inline-flex items-center gap-1 text-sm text-zinc-400 hover:text-white">
         <ArrowLeft size={14} /> Championnats
       </Link>
       <PageHeader
@@ -338,20 +338,20 @@ export function ChampionshipDetailPage() {
           </Section>
           <Section title="Historique des imports">
             {v.imports.length === 0 ? (
-              <p className="text-sm text-stone-400">Aucun import enregistré.</p>
+              <p className="text-sm text-zinc-400">Aucun import enregistré.</p>
             ) : (
               <ul className="space-y-2">
                 {v.imports.map((i) => (
-                  <li key={i.id} className={cx('flex items-center justify-between gap-2 text-sm', i.cancelledAt && 'text-stone-500 line-through')}>
+                  <li key={i.id} className={cx('flex items-center justify-between gap-2 text-sm', i.cancelledAt && 'text-zinc-500 line-through')}>
                     <span>
                       {i.tournamentName}
-                      <span className="block text-xs text-stone-500">
+                      <span className="block text-xs text-zinc-500">
                         {fmtDate(i.playedAt ?? i.importedAt)} · {i.entries} entrées
                       </span>
                     </span>
                     {!i.cancelledAt && (
                       <button
-                        className="rounded-lg p-1.5 text-stone-400 hover:text-red-300"
+                        className="rounded-lg p-1.5 text-zinc-400 hover:text-red-300"
                         title="Annuler l'import"
                         onClick={async () => {
                           if (await confirm({ title: 'Annuler cet import ?', lines: ['Les points correspondants seront retirés de tous les joueurs.'], confirmLabel: "Annuler l'import", danger: true })) {
@@ -370,18 +370,18 @@ export function ChampionshipDetailPage() {
           </Section>
           <Section title="Bonus">
             {v.bonuses.length === 0 ? (
-              <p className="text-sm text-stone-400">Aucun bonus enregistré.</p>
+              <p className="text-sm text-zinc-400">Aucun bonus enregistré.</p>
             ) : (
               <ul className="space-y-2">
                 {v.bonuses.map((b) => (
-                  <li key={b.id} className={cx('flex items-center justify-between gap-2 text-sm', b.cancelledAt && 'text-stone-500 line-through')}>
+                  <li key={b.id} className={cx('flex items-center justify-between gap-2 text-sm', b.cancelledAt && 'text-zinc-500 line-through')}>
                     <span>
                       <b>+{b.points}</b> {b.playerName}
-                      <span className="block text-xs text-stone-500">{b.justification}</span>
+                      <span className="block text-xs text-zinc-500">{b.justification}</span>
                     </span>
                     {!b.cancelledAt && (
                       <button
-                        className="rounded-lg p-1.5 text-stone-400 hover:text-red-300"
+                        className="rounded-lg p-1.5 text-zinc-400 hover:text-red-300"
                         title="Annuler ce bonus"
                         onClick={async () => {
                           if (await confirm({ title: 'Annuler ce bonus ?', danger: true })) {
@@ -476,7 +476,7 @@ function BonusModal({ champId, playerId, players, onClose }: { champId: string; 
         </button>
       }
     >
-      <p className="mb-3 text-sm text-stone-400">Points positifs pour un joueur déjà classé, avec une justification. Ils s’ajoutent toujours au total, hors jokers.</p>
+      <p className="mb-3 text-sm text-zinc-400">Points positifs pour un joueur déjà classé, avec une justification. Ils s’ajoutent toujours au total, hors jokers.</p>
       <div className="space-y-3">
         <div>
           <label className="label">Points bonus</label>
@@ -518,7 +518,7 @@ function MergeModal({ champId, players, onClose }: { champId: string; players: {
         </button>
       }
     >
-      <p className="mb-4 text-sm text-stone-400">Cette action combinera les points, les kills, les tournois et les bonus du joueur à fusionner vers le joueur conservé. Le joueur fusionné disparaîtra du classement.</p>
+      <p className="mb-4 text-sm text-zinc-400">Cette action combinera les points, les kills, les tournois et les bonus du joueur à fusionner vers le joueur conservé. Le joueur fusionné disparaîtra du classement.</p>
       <div className="space-y-3">
         <div>
           <label className="label">Joueur à conserver</label>

@@ -45,7 +45,7 @@ export function AccountPage() {
   return (
     <>
       <PageHeader title={`Bonjour${me.data.pseudo ? `, ${me.data.pseudo}` : ''} 👋`} subtitle={me.data.email} />
-      {sp.get('welcome') && <div className="mb-5 rounded-xl border border-gold-500/40 bg-gold-500/10 p-4 text-sm">Bienvenue ! Complétez votre profil pour personnaliser votre expérience, puis ouvrez votre timer depuis le menu.</div>}
+      {sp.get('welcome') && <div className="mb-5 rounded-xl border border-accent-500/40 bg-accent-500/10 p-4 text-sm">Bienvenue ! Complétez votre profil pour personnaliser votre expérience, puis ouvrez votre timer depuis le menu.</div>}
       <div className="grid gap-5 lg:grid-cols-2">
         <Section title="Mes informations" subtitle="Complétez votre profil pour personnaliser votre expérience.">
           <div className="space-y-3">
@@ -66,7 +66,7 @@ export function AccountPage() {
             <div>
               <label className="label">Nom de mon club</label>
               <input className="input" value={f.clubName ?? ''} onChange={(e) => setF({ ...f, clubName: e.target.value })} placeholder="Nom de votre club" />
-              <p className="mt-1 text-xs text-stone-500">Affiché sur les pages publiques (classements, inscriptions).</p>
+              <p className="mt-1 text-xs text-zinc-500">Affiché sur les pages publiques (classements, inscriptions).</p>
             </div>
             <div>
               <label className="label">Cadre d'utilisation</label>
@@ -78,7 +78,7 @@ export function AccountPage() {
                   { value: 'association', label: 'Club associatif' },
                 ]}
               />
-              {f.usageMode === 'association' && <p className="mt-2 text-xs text-stone-400">Cadre associatif : privilégiez les tournois gratuits ou dotés en lots ; le rake est désactivé.</p>}
+              {f.usageMode === 'association' && <p className="mt-2 text-xs text-zinc-400">Cadre associatif : privilégiez les tournois gratuits ou dotés en lots ; le rake est désactivé.</p>}
             </div>
             {f.usageMode !== 'association' && <Toggle checked={!!f.rakeEnabled} onChange={(v) => setF({ ...f, rakeEnabled: v })} label="Activer le rake" hint="Permet de prélever un montant par entrée sur le prize pool" />}
             <button className="btn-primary" onClick={saveProfile}>

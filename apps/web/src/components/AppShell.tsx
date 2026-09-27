@@ -28,7 +28,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="flex items-center gap-2 px-5 py-5">
         <img src="/favicon.svg" alt="" className="h-9 w-9" />
         <span className="text-xl font-black">
-          Poker<span className="text-gold-500">Orga</span>
+          Poker<span className="text-accent-500">Orga</span>
         </span>
       </div>
       <div className="px-3">
@@ -42,16 +42,16 @@ export function AppShell({ children }: { children: ReactNode }) {
             key={to}
             to={to}
             onClick={() => setOpen(false)}
-            className={({ isActive }) => cx('flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold', isActive ? 'bg-gold-500/15 text-gold-300' : 'text-stone-300 hover:bg-white/5')}
+            className={({ isActive }) => cx('flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold', isActive ? 'bg-accent-500/15 text-accent-300' : 'text-zinc-300 hover:bg-white/5')}
           >
             <Icon size={18} /> {label}
           </NavLink>
         ))}
       </nav>
-      <div className="border-t border-white/10 p-4 text-xs text-stone-400">
-        <p className="truncate font-medium text-stone-300">{me.data?.pseudo || me.data?.email}</p>
+      <div className="border-t border-white/10 p-4 text-xs text-zinc-400">
+        <p className="truncate font-medium text-zinc-300">{me.data?.pseudo || me.data?.email}</p>
         {me.data?.clubName && <p className="truncate">{me.data.clubName}</p>}
-        <button className="mt-3 flex items-center gap-2 text-stone-300 hover:text-white" onClick={logout}>
+        <button className="mt-3 flex items-center gap-2 text-zinc-300 hover:text-white" onClick={logout}>
           <LogOut size={14} /> Déconnexion
         </button>
       </div>
@@ -72,7 +72,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             {open ? <X /> : <Menu />}
           </button>
           <span className="font-black">
-            Poker<span className="text-gold-500">Orga</span>
+            Poker<span className="text-accent-500">Orga</span>
           </span>
         </div>
         <main className="mx-auto max-w-6xl px-4 py-6 lg:px-8 lg:py-8">{children}</main>

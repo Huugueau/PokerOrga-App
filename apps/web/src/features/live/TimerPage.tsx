@@ -57,7 +57,7 @@ export function themeStyle(theme: ThemeConfig): React.CSSProperties {
     ['--glass-blur' as string]: `${theme.glassBlur}px`,
     ['--font-timer' as string]: `'${theme.font}'`,
     ...(theme.backgroundAssetId
-      ? { backgroundImage: `linear-gradient(rgba(5,12,22,.55), rgba(5,12,22,.55)), url(${assetUrl(theme.backgroundAssetId)})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+      ? { backgroundImage: `linear-gradient(rgba(8,10,12,.6), rgba(8,10,12,.6)), url(${assetUrl(theme.backgroundAssetId)})`, backgroundSize: 'cover', backgroundPosition: 'center' }
       : {}),
   };
 }
@@ -212,12 +212,12 @@ export default function TimerPage() {
       )}
 
       {finished && !dismissedFinish && !tv && (
-        <div className="fixed inset-x-0 bottom-4 z-40 mx-auto flex w-[min(96vw,560px)] items-center justify-between gap-3 rounded-2xl border border-gold-500/50 bg-ink-900/95 px-5 py-4 shadow-glass animate-pop">
+        <div className="fixed inset-x-0 bottom-4 z-40 mx-auto flex w-[min(96vw,560px)] items-center justify-between gap-3 rounded-2xl border border-accent-500/50 bg-ink-900/95 px-5 py-4 shadow-glass animate-pop">
           <div className="flex items-center gap-3">
-            <Trophy className="text-gold-400" />
+            <Trophy className="text-accent-400" />
             <div>
               <p className="font-bold">Tournoi terminé !</p>
-              <p className="text-sm text-stone-400">Vainqueur : {snap.players.find((p) => p.finishRank === 1)?.pseudo}</p>
+              <p className="text-sm text-zinc-400">Vainqueur : {snap.players.find((p) => p.finishRank === 1)?.pseudo}</p>
             </div>
           </div>
           <div className="flex gap-2">
@@ -255,7 +255,7 @@ export default function TimerPage() {
 function Stat({ label, value, big }: { label: string; value: React.ReactNode; big?: boolean }) {
   return (
     <div className="text-center">
-      <p className="eyebrow !text-stone-300/80">{label}</p>
+      <p className="eyebrow !text-zinc-300/80">{label}</p>
       <p className={cx('font-extrabold tabular title-color', big ? 'text-[clamp(1.6rem,3vw,3rem)]' : 'text-[clamp(1.2rem,2.2vw,2.2rem)]')}>{value}</p>
     </div>
   );
@@ -268,11 +268,11 @@ function money(snap: TournamentSnapshot, n: number) {
 function PayoutList({ snap }: { snap: TournamentSnapshot }) {
   const t = snap.tournament;
   if (t.settings.hidePayout) return null;
-  if (t.settings.isFree) return <p className="text-center text-sm text-stone-400">Tournoi gratuit</p>;
+  if (t.settings.isFree) return <p className="text-center text-sm text-zinc-400">Tournoi gratuit</p>;
   const lots = t.payouts.type === 'lots';
   const items = lots ? t.payouts.lots.filter(Boolean) : snap.computedPayouts;
-  if (snap.players.length === 0) return <p className="text-center text-sm text-stone-400">Ajouter des joueurs pour afficher les places payées</p>;
-  if (items.length === 0) return <p className="text-center text-sm text-stone-400">Aucune place payée configurée.</p>;
+  if (snap.players.length === 0) return <p className="text-center text-sm text-zinc-400">Ajouter des joueurs pour afficher les places payées</p>;
+  if (items.length === 0) return <p className="text-center text-sm text-zinc-400">Aucune place payée configurée.</p>;
   const active = snap.stats.activePlayers;
   return (
     <ul className="space-y-1.5">
@@ -280,7 +280,7 @@ function PayoutList({ snap }: { snap: TournamentSnapshot }) {
         const winner = snap.players.find((p) => p.finishRank === i + 1 && p.status === 'eliminated');
         const bubble = i + 1 === active;
         return (
-          <li key={i} className={cx('flex items-center justify-between gap-2 rounded-lg px-3 py-1.5', winner ? 'bg-white/5 text-stone-400' : bubble ? 'bg-[color:var(--c-secondary)]/15' : 'bg-white/5')}>
+          <li key={i} className={cx('flex items-center justify-between gap-2 rounded-lg px-3 py-1.5', winner ? 'bg-white/5 text-zinc-400' : bubble ? 'bg-[color:var(--c-secondary)]/15' : 'bg-white/5')}>
             <span className="text-sm font-semibold">{ordinalPrize(i + 1)}</span>
             <span className="truncate text-right text-sm font-bold tabular">
               {winner ? <span className="mr-2 text-xs font-normal">{winner.pseudo}</span> : null}
@@ -341,13 +341,13 @@ function DesktopTimer({
           <h1 className="title-color text-center text-[clamp(1.4rem,3vw,3rem)] font-black uppercase leading-tight tracking-wide">{t.title}</h1>
           {controls && (
             <div className="mt-1 flex items-center gap-2" aria-label="Contrôles du timer">
-              <button className="rounded-full p-2 text-stone-300 hover:bg-white/10 disabled:opacity-30" onClick={() => onClock('prev')} disabled={clock.levelIndex === 0} aria-label="Niveau précédent">
+              <button className="rounded-full p-2 text-zinc-300 hover:bg-white/10 disabled:opacity-30" onClick={() => onClock('prev')} disabled={clock.levelIndex === 0} aria-label="Niveau précédent">
                 <SkipBack size={20} />
               </button>
-              <button className="flex h-11 w-11 items-center justify-center rounded-full bg-stone-100 text-ink-950 hover:bg-white" onClick={() => onClock(clock.running ? 'pause' : 'play')} aria-label={clock.running ? 'Pause' : 'Reprendre'}>
+              <button className="flex h-11 w-11 items-center justify-center rounded-full bg-zinc-100 text-ink-950 hover:bg-white" onClick={() => onClock(clock.running ? 'pause' : 'play')} aria-label={clock.running ? 'Pause' : 'Reprendre'}>
                 {clock.running ? <Pause size={20} /> : <Play size={20} className="ml-0.5" />}
               </button>
-              <button className="rounded-full p-2 text-stone-300 hover:bg-white/10 disabled:opacity-30" onClick={() => onClock('next')} disabled={clock.levelIndex >= t.structure.length - 1} aria-label="Niveau suivant">
+              <button className="rounded-full p-2 text-zinc-300 hover:bg-white/10 disabled:opacity-30" onClick={() => onClock('next')} disabled={clock.levelIndex >= t.structure.length - 1} aria-label="Niveau suivant">
                 <SkipForward size={20} />
               </button>
             </div>
@@ -392,7 +392,7 @@ function DesktopTimer({
         {/* horloge */}
         <section className="flex flex-col gap-3">
           <div className="glass flex flex-1 flex-col items-center justify-center rounded-2xl px-4 py-6">
-            <p className="eyebrow !text-sm !text-stone-200">{clock.finished ? 'Structure terminée' : 'Temps restant :'}</p>
+            <p className="eyebrow !text-sm !text-zinc-200">{clock.finished ? 'Structure terminée' : 'Temps restant :'}</p>
             <p className={cx('title-color font-black leading-none tabular', lastMinute && 'text-red-400', 'text-[clamp(4.5rem,13vw,13rem)]')} style={lastMinute ? { color: '#f87171' } : undefined}>
               {clock.finished ? 'FIN' : formatMs(clock.remainingMs)}
             </p>
@@ -428,14 +428,14 @@ function DesktopTimer({
               <p className="title-color text-[clamp(2.5rem,6vw,6rem)] font-black tracking-widest">PAUSE</p>
             ) : (
               <>
-                <p className="eyebrow !text-sm !text-stone-200">Niveau {clock.levelNumber}</p>
+                <p className="eyebrow !text-sm !text-zinc-200">Niveau {clock.levelNumber}</p>
                 <p className="title-color text-[clamp(2.5rem,6.5vw,6.5rem)] font-black leading-none tabular">
                   {formatBlind(cur?.sb ?? 0)} / {formatBlind(cur?.bb ?? 0)}
                 </p>
                 {!!cur?.ante && <p className="accent mt-1 text-[clamp(1.1rem,2vw,2rem)] font-bold">Ante : {formatBlind(cur.ante)}</p>}
               </>
             )}
-            <p className="mt-2 text-[clamp(.9rem,1.4vw,1.4rem)] font-semibold text-stone-300">
+            <p className="mt-2 text-[clamp(.9rem,1.4vw,1.4rem)] font-semibold text-zinc-300">
               Niveau suivant :{' '}
               <span className="title-color font-bold tabular">
                 {clock.nextLevel ? `${formatBlind(clock.nextLevel.sb)} / ${formatBlind(clock.nextLevel.bb)}${clock.nextLevel.ante ? ` (${formatBlind(clock.nextLevel.ante)})` : ''}` : '—'}
@@ -479,7 +479,7 @@ function DesktopTimer({
           </div>
         </aside>
       </main>
-      <footer className="text-center text-[11px] text-stone-500 no-print">Espace : pause/reprise · ←/→ : niveaux · S : sortant · T : mode TV · F : plein écran</footer>
+      <footer className="text-center text-[11px] text-zinc-500 no-print">Espace : pause/reprise · ←/→ : niveaux · S : sortant · T : mode TV · F : plein écran</footer>
     </div>
   );
 }
@@ -513,7 +513,7 @@ function MobileTimer({
         <p className="title-color text-6xl font-black tabular">{clock.finished ? 'FIN' : formatMs(clock.remainingMs)}</p>
         {!clock.running && <span className="text-xs font-black tracking-widest accent">PAUSE</span>}
         <p className="mt-2 text-xl font-bold tabular">{cur?.kind === 'break' ? 'PAUSE' : `Niv. ${clock.levelNumber} · ${formatBlind(cur?.sb ?? 0)} / ${formatBlind(cur?.bb ?? 0)}${cur?.ante ? ` (${formatBlind(cur.ante)})` : ''}`}</p>
-        <div className="mt-3 grid grid-cols-3 gap-2 text-xs text-stone-300">
+        <div className="mt-3 grid grid-cols-3 gap-2 text-xs text-zinc-300">
           <span>
             Joueurs
             <br />
@@ -558,7 +558,7 @@ function MobileTimer({
         <button className="rounded-full p-3 disabled:opacity-30" onClick={() => onClock('prev')} disabled={clock.levelIndex === 0} aria-label="Niveau précédent">
           <SkipBack />
         </button>
-        <button className="flex h-16 w-16 items-center justify-center rounded-full bg-stone-100 text-ink-950" onClick={() => onClock(clock.running ? 'pause' : 'play')} aria-label={clock.running ? 'Pause' : 'Reprendre'}>
+        <button className="flex h-16 w-16 items-center justify-center rounded-full bg-zinc-100 text-ink-950" onClick={() => onClock(clock.running ? 'pause' : 'play')} aria-label={clock.running ? 'Pause' : 'Reprendre'}>
           {clock.running ? <Pause size={28} /> : <Play size={28} className="ml-1" />}
         </button>
         <button className="rounded-full p-3 disabled:opacity-30" onClick={() => onClock('next')} disabled={clock.levelIndex >= t.structure.length - 1} aria-label="Niveau suivant">
@@ -579,7 +579,7 @@ function BalanceBanner({ snap, onDone, readOnly }: { snap: TournamentSnapshot; o
         {moves.map((m, i) => (
           <li key={i} className="flex items-center justify-between gap-2 rounded-lg bg-white/5 px-3 py-2 text-sm">
             <span className="font-bold">{names.get(m.playerId) ?? m.pseudo ?? 'Joueur'}</span>
-            <span className="tabular text-stone-300">
+            <span className="tabular text-zinc-300">
               {m.from ? `T${m.from.table} S${m.from.seat}` : '—'} → <b className="text-white">Table {m.to.table} · Siège {m.to.seat}</b>
             </span>
           </li>

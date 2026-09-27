@@ -37,7 +37,7 @@ interface Reg {
 }
 
 export const STATUS_LABEL: Record<EventRow['status'], string> = { draft: 'Brouillon', open: 'Inscriptions ouvertes', closed: 'Inscriptions closes', imported: 'Importée' };
-const STATUS_COLOR: Record<EventRow['status'], string> = { draft: 'text-stone-300', open: 'border-emerald-400/40 text-emerald-300', closed: 'border-amber-400/40 text-amber-300', imported: 'text-stone-400' };
+const STATUS_COLOR: Record<EventRow['status'], string> = { draft: 'text-zinc-300', open: 'border-emerald-400/40 text-emerald-300', closed: 'border-amber-400/40 text-amber-300', imported: 'text-zinc-400' };
 
 export function PlanningPage() {
   const q = useQuery({ queryKey: ['events'], queryFn: () => api.get<{ items: EventRow[] }>('/events') });
@@ -74,12 +74,12 @@ export function PlanningPage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((e) => (
-            <Link key={e.id} to={`/planning/${e.id}`} className="card block p-5 hover:border-gold-500/40">
+            <Link key={e.id} to={`/planning/${e.id}`} className="card block p-5 hover:border-accent-500/40">
               <div className="flex items-start justify-between gap-2">
                 <h3 className="font-bold">{e.name}</h3>
                 <span className={cx('chip', STATUS_COLOR[e.status])}>{STATUS_LABEL[e.status]}</span>
               </div>
-              <p className="mt-2 text-sm text-stone-400">
+              <p className="mt-2 text-sm text-zinc-400">
                 {e.eventDate ? fmtDate(e.eventDate) : 'Date à définir'}
                 {e.eventTime ? ` · ${e.eventTime}` : ''}
               </p>
@@ -170,7 +170,7 @@ function EventForm({ event, onClose }: { event?: EventRow; onClose: () => void }
         <div>
           <label className="label">Capacité max</label>
           <NumberField value={f.capacity} min={2} max={1000} allowEmpty onCommit={(v) => setF({ ...f, capacity: v })} />
-          <p className="mt-1 text-xs text-stone-500">Vide = illimité. Au-delà : liste d'attente.</p>
+          <p className="mt-1 text-xs text-zinc-500">Vide = illimité. Au-delà : liste d'attente.</p>
         </div>
         <div>
           <label className="label">Format (joueurs / table)</label>
@@ -206,7 +206,7 @@ function EventForm({ event, onClose }: { event?: EventRow; onClose: () => void }
         </div>
         <div className="sm:col-span-2">
           <label className="label">Options posées aux joueurs</label>
-          <p className="mb-2 text-xs text-stone-500">Les choix de réponses pour les options sont Oui / Non / Ne sais pas.{optionsLocked && ' Les options sont figées après publication.'}</p>
+          <p className="mb-2 text-xs text-zinc-500">Les choix de réponses pour les options sont Oui / Non / Ne sais pas.{optionsLocked && ' Les options sont figées après publication.'}</p>
           <div className="space-y-2">
             {f.options.map((o, i) => (
               <div key={o.id} className="flex gap-2">
@@ -218,7 +218,7 @@ function EventForm({ event, onClose }: { event?: EventRow; onClose: () => void }
                   placeholder="Présent au repas, prévoir 15€"
                 />
                 {!optionsLocked && (
-                  <button className="rounded-lg p-2 text-stone-400 hover:text-red-300" onClick={() => setF({ ...f, options: f.options.filter((_, j) => j !== i) })} aria-label="Supprimer l'option">
+                  <button className="rounded-lg p-2 text-zinc-400 hover:text-red-300" onClick={() => setF({ ...f, options: f.options.filter((_, j) => j !== i) })} aria-label="Supprimer l'option">
                     <Trash2 size={16} />
                   </button>
                 )}
@@ -280,7 +280,7 @@ export function EventDetailPage() {
 
   return (
     <>
-      <Link to="/planning" className="mb-4 inline-flex items-center gap-1 text-sm text-stone-400 hover:text-white">
+      <Link to="/planning" className="mb-4 inline-flex items-center gap-1 text-sm text-zinc-400 hover:text-white">
         <ArrowLeft size={14} /> Mon planning
       </Link>
       <PageHeader
@@ -356,13 +356,13 @@ export function EventDetailPage() {
         >
           <div className="mb-4 flex flex-wrap gap-1.5">
             {TABS.map((t) => (
-              <button key={t.key} onClick={() => setTab(t.key)} className={cx('rounded-full px-3 py-1 text-xs font-semibold', tab === t.key ? 'bg-gold-500 text-ink-950' : 'bg-white/5 text-stone-300 hover:bg-white/10')}>
+              <button key={t.key} onClick={() => setTab(t.key)} className={cx('rounded-full px-3 py-1 text-xs font-semibold', tab === t.key ? 'bg-accent-500 text-ink-950' : 'bg-white/5 text-zinc-300 hover:bg-white/10')}>
                 {t.label} ({regs.filter(t.filter).length})
               </button>
             ))}
           </div>
           {list.length === 0 ? (
-            <p className="py-8 text-center text-sm text-stone-400">{tab === 'pending' ? 'Aucun joueur à valider.' : 'Aucun participant.'}</p>
+            <p className="py-8 text-center text-sm text-zinc-400">{tab === 'pending' ? 'Aucun joueur à valider.' : 'Aucun participant.'}</p>
           ) : (
             <div className="divide-y divide-white/5">
               {list.map((r) => (
@@ -371,11 +371,11 @@ export function EventDetailPage() {
                     <p className="font-semibold">
                       {r.pseudo} {r.present && <span className="chip ml-1 border-emerald-400/40 text-emerald-300">✓ Présent</span>}
                     </p>
-                    <p className="text-xs text-stone-500">
+                    <p className="text-xs text-zinc-500">
                       {[r.firstName, r.lastName].filter(Boolean).join(' ')} {r.email && `· ${r.email}`} · inscrit le {fmtDate(r.createdAt, true)}
                     </p>
                     {e.options.length > 0 && (
-                      <p className="mt-0.5 text-xs text-stone-400">
+                      <p className="mt-0.5 text-xs text-zinc-400">
                         {e.options.map((o) => `${o.label} : ${{ yes: 'Oui', no: 'Non', unknown: 'Ne sait pas' }[r.answers[o.id]] ?? '—'}`).join(' · ')}
                       </p>
                     )}
@@ -417,10 +417,10 @@ export function EventDetailPage() {
         <div className="space-y-5">
           <Section title="Page d'inscription">
             {e.status === 'draft' ? (
-              <p className="text-sm text-stone-400">Publiez l'événement pour ouvrir la page d'inscription publique.</p>
+              <p className="text-sm text-zinc-400">Publiez l'événement pour ouvrir la page d'inscription publique.</p>
             ) : (
               <div className="space-y-2">
-                <p className="break-all rounded-lg bg-ink-950/60 p-2 text-xs text-stone-300">{publicUrl}</p>
+                <p className="break-all rounded-lg bg-ink-950/60 p-2 text-xs text-zinc-300">{publicUrl}</p>
                 <div className="flex gap-2">
                   <button
                     className="btn-ghost btn-sm"
@@ -445,32 +445,32 @@ export function EventDetailPage() {
           <Section title="Infos">
             <dl className="space-y-1.5 text-sm">
               <div className="flex justify-between">
-                <dt className="text-stone-400">Format</dt>
+                <dt className="text-zinc-400">Format</dt>
                 <dd>{e.maxPerTable}-max</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-stone-400">Stack</dt>
+                <dt className="text-zinc-400">Stack</dt>
                 <dd>{e.startStack.toLocaleString('fr-FR')}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-stone-400">Financier</dt>
+                <dt className="text-zinc-400">Financier</dt>
                 <dd>{e.financialMode === 'money' ? `Buy-in ${formatMoney(e.buyin)}` : e.financialMode === 'lots' ? 'Dotation en lots' : 'Gratuit'}</dd>
               </div>
             </dl>
           </Section>
           <Section title="Import dans le live">
             {locked ? (
-              <p className="text-sm text-stone-400">
+              <p className="text-sm text-zinc-400">
                 Joueurs importés.{' '}
                 {e.tournamentId && (
-                  <Link className="text-gold-400 underline" to={`/live/${e.tournamentId}`}>
+                  <Link className="text-accent-400 underline" to={`/live/${e.tournamentId}`}>
                     Ouvrir le live
                   </Link>
                 )}
               </p>
             ) : (
               <>
-                <p className="mb-3 text-sm text-stone-400">
+                <p className="mb-3 text-sm text-zinc-400">
                   {regs.filter((r) => r.status === 'validated').length} validé(s) dont {regs.filter((r) => r.status === 'validated' && r.present).length} présent(s).
                 </p>
                 <button className="btn-primary w-full" onClick={() => setImporting(true)} disabled={!regs.some((r) => r.status === 'validated')}>
@@ -549,7 +549,7 @@ function ImportModal({ event, regs, onClose, onDone }: { event: EventRow; regs: 
             ))}
           </select>
         </div>
-        <p className="text-xs text-stone-400">La page d'inscription sera fermée et l'événement archivé.</p>
+        <p className="text-xs text-zinc-400">La page d'inscription sera fermée et l'événement archivé.</p>
       </div>
     </Modal>
   );

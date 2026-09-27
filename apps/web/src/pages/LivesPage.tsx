@@ -45,27 +45,27 @@ export function LivesPage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {q.data?.tournaments.map((t) => (
-            <Link key={t.id} to={`/live/${t.id}`} className="card block p-5 transition hover:border-gold-500/40">
+            <Link key={t.id} to={`/live/${t.id}`} className="card block p-5 transition hover:border-accent-500/40">
               <div className="flex items-start justify-between gap-2">
                 <h3 className="font-bold">{t.title}</h3>
                 <span className="chip">
                   {t.status === 'prepared' ? 'Préparé' : t.running ? <><Play size={11} /> En cours</> : <><Pause size={11} /> En pause</>}
                 </span>
               </div>
-              <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs text-stone-400">
+              <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs text-zinc-400">
                 <div>
                   Joueurs
-                  <p className="text-lg font-bold text-stone-100">
+                  <p className="text-lg font-bold text-zinc-100">
                     {t.stats.activePlayers}/{t.stats.totalEntries}
                   </p>
                 </div>
                 <div>
                   Prize pool
-                  <p className="text-lg font-bold text-stone-100">{formatMoney(t.stats.prizePool)}</p>
+                  <p className="text-lg font-bold text-zinc-100">{formatMoney(t.stats.prizePool)}</p>
                 </div>
                 <div>
                   Niveau
-                  <p className="text-lg font-bold text-stone-100">{t.levelIndex + 1}</p>
+                  <p className="text-lg font-bold text-zinc-100">{t.levelIndex + 1}</p>
                 </div>
               </div>
             </Link>
