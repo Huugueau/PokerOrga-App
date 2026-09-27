@@ -16,6 +16,7 @@ import { checkinRoutes } from './routes/checkin';
 import { clubRoutes } from './routes/club';
 import { flightRoutes } from './routes/flights';
 import { playerAccountRoutes } from './routes/playerAccount';
+import { directoryRoutes } from './routes/directory';
 import { eventRoutes } from './routes/events';
 import { favoriteRoutes } from './routes/favorites';
 import { historyRoutes } from './routes/history';
@@ -78,6 +79,7 @@ export async function buildApp() {
       await api.register(checkinRoutes);
       await api.register(flightRoutes);
       await api.register(playerAccountRoutes);
+      await api.register(directoryRoutes);
     },
     { prefix: '/api' },
   );

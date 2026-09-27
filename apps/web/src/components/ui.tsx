@@ -33,12 +33,16 @@ export function Modal({
   dismissable?: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  // onClose est souvent une fonction recréée à chaque rendu du parent (ex. le timer, chaque seconde) :
+  // on la garde dans une ref pour ne pas relancer l'effet, qui remettrait le focus sur le premier champ.
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && dismissable) {
         e.stopPropagation();
-        onClose();
+        closeRef.current();
       }
     };
     window.addEventListener('keydown', onKey, true);
@@ -51,7 +55,7 @@ export function Modal({
       window.removeEventListener('keydown', onKey, true);
       prev?.focus?.();
     };
-  }, [open, onClose, dismissable]);
+  }, [open, dismissable]);
   if (!open) return null;
   const w = { sm: 'max-w-sm', md: 'max-w-lg', lg: 'max-w-2xl', xl: 'max-w-4xl' }[size];
   return createPortal(

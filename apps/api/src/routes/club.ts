@@ -3,7 +3,7 @@ import type { FastifyInstance } from 'fastify';
 import { toCsv, uid } from '@pokerorga/shared';
 import { z } from 'zod';
 import { db, schema } from '../db';
-import { bad, conflict, idParam, notFound, parse, publicToken, sendCsv, userId } from '../lib';
+import { bad, conflict, idParam, notFound, parse, parsePatch, publicToken, sendCsv, userId } from '../lib';
 import { mutateTournament } from '../services/tournament';
 import { insertPlayers } from './players';
 
@@ -108,6 +108,7 @@ export async function clubRoutes(app: FastifyInstance) {
         description: optText(3000).optional(),
         logoAssetId: z.string().uuid().nullable().optional(),
         published: z.boolean().optional(),
+        listed: z.boolean().optional(),
         roles: z.array(z.object({ id: z.string().max(64), name: z.string().trim().min(1).max(40), color: z.string().regex(/^#[0-9a-fA-F]{6}$/) })).max(20).optional(),
       }),
       req.body,
@@ -131,7 +132,7 @@ export async function clubRoutes(app: FastifyInstance) {
 
   app.patch('/club/seasons/:id', async (req) => {
     const { id } = parse(idParam, req.params);
-    const body = parse(seasonInput.partial().extend({ open: z.boolean().optional() }), req.body);
+    const body = parsePatch(seasonInput.partial().extend({ open: z.boolean().optional() }), req.body);
     const c = await getClub(userId(req));
     if (body.open) {
       const [open] = await db
@@ -193,11 +194,17 @@ export async function clubRoutes(app: FastifyInstance) {
   });
 
   app.post('/club/members', async (req) => {
-    const body = parse(memberInput.extend({ seasonId: z.string().uuid().optional() }), req.body);
+    const body = parse(memberInput.extend({ seasonId: z.string().uuid().optional(), playerAccountId: z.string().uuid().nullish() }), req.body);
     const c = await getClub(userId(req));
     if (await pseudoTaken(c.id, body.pseudo)) throw bad('Ce pseudo est déjà utilisé dans le club.');
+    if (body.playerAccountId) {
+      const [acc] = await db.select({ id: schema.playerAccounts.id }).from(schema.playerAccounts).where(eq(schema.playerAccounts.id, body.playerAccountId));
+      if (!acc) throw bad('Compte joueur introuvable.');
+      const [dup] = await db.select({ pseudo: clubMembers.pseudo }).from(clubMembers).where(and(eq(clubMembers.clubId, c.id), eq(clubMembers.playerAccountId, acc.id)));
+      if (dup) throw bad(`Ce joueur est déjà adhérent (${dup.pseudo}).`);
+    }
     const { seasonId, ...data } = body;
-    const [m] = await db.insert(clubMembers).values({ ...data, clubId: c.id, code: memberCode() }).returning();
+    const [m] = await db.insert(clubMembers).values({ ...data, playerAccountId: data.playerAccountId ?? null, clubId: c.id, code: memberCode() }).returning();
     if (seasonId) {
       const [s] = await db.select().from(clubSeasons).where(and(eq(clubSeasons.id, seasonId), eq(clubSeasons.clubId, c.id)));
       if (s) await db.insert(clubMemberships).values({ memberId: m.id, seasonId, duesExpected: s.duesAmount });
@@ -207,11 +214,16 @@ export async function clubRoutes(app: FastifyInstance) {
 
   app.patch('/club/members/:id', async (req) => {
     const { id } = parse(idParam, req.params);
-    const body = parse(memberInput.partial().extend({ playerEmail: z.string().trim().toLowerCase().max(200).nullish() }), req.body);
+    const body = parsePatch(memberInput.partial().extend({ playerEmail: z.string().trim().toLowerCase().max(200).nullish(), playerAccountId: z.string().uuid().optional() }), req.body);
     const c = await getClub(userId(req));
     await memberOf(c.id, id);
-    const { playerEmail, ...rest } = body;
+    const { playerEmail, playerAccountId, ...rest } = body;
     const set: Partial<typeof clubMembers.$inferInsert> = rest;
+    if (playerAccountId) {
+      const [acc] = await db.select({ id: schema.playerAccounts.id }).from(schema.playerAccounts).where(eq(schema.playerAccounts.id, playerAccountId));
+      if (!acc) throw bad('Compte joueur introuvable.');
+      set.playerAccountId = acc.id;
+    }
     if (playerEmail !== undefined) {
       if (!playerEmail) set.playerAccountId = null;
       else {

@@ -3,7 +3,7 @@ import type { FastifyInstance } from 'fastify';
 import { toCsv, uid } from '@pokerorga/shared';
 import { z } from 'zod';
 import { db, schema } from '../db';
-import { bad, idParam, notFound, parse, publicToken, sendCsv, userId } from '../lib';
+import { bad, idParam, notFound, parse, parsePatch, publicToken, sendCsv, userId } from '../lib';
 import { mutateTournament } from '../services/tournament';
 import { insertPlayers } from './players';
 
@@ -23,6 +23,7 @@ export const eventInput = z.object({
   buyin: z.number().min(0).max(100000).default(0),
   description: z.string().max(2000).nullish(),
   options: z.array(z.object({ id: z.string().max(64).optional(), label: z.string().trim().min(1).max(120) })).max(10).default([]),
+  listed: z.boolean().default(false),
 });
 
 export const registrationInput = z.object({
@@ -92,7 +93,7 @@ export async function eventRoutes(app: FastifyInstance) {
 
   app.patch('/events/:id', async (req) => {
     const { id } = parse(idParam, req.params);
-    const body = parse(eventInput.partial(), req.body);
+    const body = parsePatch(eventInput.partial(), req.body);
     const e = await getEvent(id, userId(req));
     if (e.status === 'imported') throw bad('Action impossible : événement déjà importé.');
     if (body.options && e.status !== 'draft') {
@@ -128,13 +129,21 @@ export async function eventRoutes(app: FastifyInstance) {
 
   app.post('/events/:id/registrations', async (req) => {
     const { id } = parse(idParam, req.params);
-    const body = parse(registrationInput, req.body);
+    const { playerAccountId, ...body } = parse(registrationInput.extend({ playerAccountId: z.string().uuid().nullish() }), req.body);
     const e = await getEvent(id, userId(req));
     if (e.status === 'imported') throw bad('Action impossible : événement déjà importé.');
     if (await pseudoInEvent(id, body.pseudo)) throw bad('Ce pseudo est déjà inscrit.');
+    let accountId: string | null = null;
+    if (playerAccountId) {
+      const [acc] = await db.select({ id: schema.playerAccounts.id }).from(schema.playerAccounts).where(eq(schema.playerAccounts.id, playerAccountId));
+      if (!acc) throw bad('Compte joueur introuvable.');
+      const [dup] = await db.select({ id: registrations.id }).from(registrations).where(and(eq(registrations.eventId, id), eq(registrations.playerAccountId, acc.id)));
+      if (dup) throw bad('Ce joueur est déjà inscrit.');
+      accountId = acc.id;
+    }
     const [row] = await db
       .insert(registrations)
-      .values({ eventId: id, ...body, email: body.email || null, status: 'validated', code: registrationCode() })
+      .values({ eventId: id, ...body, email: body.email || null, status: 'validated', code: registrationCode(), playerAccountId: accountId })
       .returning();
     return row;
   });

@@ -603,3 +603,24 @@ Table `player_accounts` (email unique, mot de passe bcrypt, pseudo, prénom, nom
 API `/api/player/*` : inscription, connexion, déconnexion, profil, régénération du QR, « Mes tournois » (préinscriptions + résultats des tournois terminés), annulation d'une préinscription. Une préinscription publique faite en étant connecté est rattachée au compte (un seul enregistrement par événement). Pointage : le QR `P…` est reconnu comme carte membre si la fiche est liée, sinon comme préinscription chez cet organisateur, sinon le joueur est ajouté sur demande. Fiche adhérent : liaison / déliaison à un compte par email.
 
 Front : `/joueur` (connexion / création), `/joueur/espace` (QR, profil, mes tournois, mes résultats) ; la page d'inscription publique pré-remplit le formulaire du joueur connecté. Test de bout en bout : **42/42**.
+
+### 13.8 Recherche de joueurs et annuaire public
+**Recherche (organisateur).** `GET /api/directory/players?q=` fusionne trois sources : les adhérents de son club, les joueurs de ses tournois passés (regroupés par pseudo, avec le nombre de tournois joués) et les comptes joueurs « trouvables » (à partir de 2 caractères). Un compte joueur n'expose que son pseudo, son prénom et l'initiale de son nom, jamais son email. Le joueur peut se retirer de la recherche depuis son espace (`player_accounts.discoverable`, activé par défaut) ; il reste alors proposé aux organisateurs qui le connaissent déjà (adhérent ou joueur de leurs tournois).
+
+Le composant `PlayerSearchInput` (autocomplétion, clavier ↑ ↓ Entrée Échap) remplace le champ pseudo dans :
+- l'ajout d'un joueur à un live (timer et Réglages) ;
+- l'ajout d'un adhérent ;
+- la liaison d'une fiche adhérent à un compte ;
+- l'ajout manuel d'un participant à un événement.
+
+Choisir une suggestion rattache l'entrée à l'adhérent et/ou au compte (`memberId`, `playerAccountId`, validés côté serveur par `sanitizeLinks`). Le joueur retrouve ainsi ses résultats, ses préinscriptions et ses clubs (« Mes clubs ») dans son espace.
+
+**Annuaire public (`/tournois`).** `GET /api/public/directory` liste :
+- les événements qu'un organisateur a choisi d'afficher (`events.listed`, interrupteur sur la fiche de l'événement), s'ils sont ouverts ou clos et à venir ;
+- les clubs publiés et affichés (`clubs.listed`, interrupteur dans les paramètres du club).
+
+La page propose des onglets Tournois / Clubs et une recherche par nom, lieu, organisateur ou ville. Elle montre les places restantes, et, pour un joueur connecté, son statut d'inscription ; le bouton « S'inscrire » mène à la page d'inscription de l'événement. Tout est masqué par défaut : un home game privé reste privé.
+
+**Correctif transverse.** Zod 4 applique les `.default()` même dans un `.partial()`, si bien qu'une modification partielle remettait à zéro les champs non envoyés. Par exemple, lier un compte à un adhérent effaçait ses rôles, et modifier les réglages d'un tournoi désactivait le Multi SnG. `parsePatch()` ne conserve désormais que les clés réellement envoyées. Par ailleurs, la fenêtre modale ne reprend plus le focus à chaque rendu du parent : sur le timer, le curseur ne saute plus du champ en cours de saisie vers le premier champ.
+
+Tests : test de bout en bout de l'API **49/49**, E2E `e2e/directory.spec.ts` (annuaire, inscription depuis la liste, ajout par recherche au club et au live, retrait de la recherche).

@@ -6,12 +6,12 @@ import { db, schema } from '../db';
 import { env } from '../env';
 import { bad, HttpError, notFound, parse, publicToken } from '../lib';
 
-const { playerAccounts, registrations, events, players, tournaments, users } = schema;
+const { playerAccounts, registrations, events, players, tournaments, users, clubs, clubMembers } = schema;
 export const PLAYER_COOKIE = 'po_player';
 export const playerQr = () => 'P' + publicToken(12);
 
 type Account = typeof playerAccounts.$inferSelect;
-const view = (a: Account) => ({ id: a.id, email: a.email, pseudo: a.pseudo, firstName: a.firstName, lastName: a.lastName, qrCode: a.qrCode });
+const view = (a: Account) => ({ id: a.id, email: a.email, pseudo: a.pseudo, firstName: a.firstName, lastName: a.lastName, qrCode: a.qrCode, discoverable: a.discoverable });
 
 /** Compte joueur connecté (cookie séparé de celui des organisateurs), ou null. */
 export async function currentPlayer(app: FastifyInstance, req: FastifyRequest): Promise<Account | null> {
@@ -76,7 +76,7 @@ export async function playerAccountRoutes(app: FastifyInstance) {
 
   app.patch('/player/me', async (req) => {
     const a = await requirePlayer(app, req);
-    const body = parse(z.object({ pseudo: z.string().trim().min(1).max(40).optional(), firstName: z.string().trim().max(60).nullish(), lastName: z.string().trim().max(60).nullish() }), req.body);
+    const body = parse(z.object({ pseudo: z.string().trim().min(1).max(40).optional(), firstName: z.string().trim().max(60).nullish(), lastName: z.string().trim().max(60).nullish(), discoverable: z.boolean().optional() }), req.body);
     const [row] = await db.update(playerAccounts).set(body).where(eq(playerAccounts.id, a.id)).returning();
     return { player: view(row) };
   });
@@ -103,10 +103,16 @@ export async function playerAccountRoutes(app: FastifyInstance) {
       .innerJoin(tournaments, eq(tournaments.id, players.tournamentId))
       .where(and(eq(players.playerAccountId, a.id), isNotNull(players.finishRank), eq(tournaments.status, 'finished')))
       .orderBy(desc(tournaments.finishedAt));
+    const myClubs = await db
+      .select({ name: clubs.name, city: clubs.city, published: clubs.published, publicToken: clubs.publicToken, pseudo: clubMembers.pseudo, code: clubMembers.code })
+      .from(clubMembers)
+      .innerJoin(clubs, eq(clubs.id, clubMembers.clubId))
+      .where(eq(clubMembers.playerAccountId, a.id));
     const counts = played.length
       ? await db.select({ tid: players.tournamentId }).from(players).where(inArray(players.tournamentId, played.map((x) => x.t.id)))
       : [];
     return {
+      clubs: myClubs.map((c) => ({ name: c.name, city: c.city, pseudo: c.pseudo, code: c.code, publicToken: c.published ? c.publicToken : null })),
       registrations: regs.map(({ r, e, organizer }) => ({
         code: r.code,
         status: r.status,

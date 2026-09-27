@@ -1,10 +1,10 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { formatMoney } from '@pokerorga/shared';
-import { CalendarDays, LogOut, MapPin, RefreshCw, Trophy } from 'lucide-react';
+import { CalendarDays, Compass, IdCard, LogOut, MapPin, RefreshCw, Trophy, UserRound } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { QrCode } from '../components/QrCode';
-import { cx, Empty, fmtDate, Loading, useConfirm, useToast } from '../components/ui';
+import { cx, Empty, fmtDate, Loading, Toggle, useConfirm, useToast } from '../components/ui';
 import { api, ApiError } from '../lib/api';
 
 export interface PlayerAccount {
@@ -14,21 +14,33 @@ export interface PlayerAccount {
   firstName: string | null;
   lastName: string | null;
   qrCode: string;
+  discoverable: boolean;
 }
 
 export function usePlayer() {
   return useQuery({ queryKey: ['player-me'], queryFn: async () => (await api.get<{ player: PlayerAccount | null }>('/player/me')).player, staleTime: 30_000 });
 }
 
-function Frame({ children }: { children: React.ReactNode }) {
+export function Frame({ children, subtitle = 'espace joueur', wide }: { children: React.ReactNode; subtitle?: string; wide?: boolean }) {
+  const me = usePlayer();
   return (
     <div className="bg-felt min-h-screen">
-      <div className="mx-auto max-w-3xl px-4 py-8">
-        <div className="mb-6 flex items-center gap-2">
-          <img src="/favicon.svg" alt="" className="h-9 w-9" />
-          <span className="text-xl font-black">
-            Poker<span className="text-accent-500">Orga</span> <span className="text-sm font-semibold text-zinc-400">· espace joueur</span>
-          </span>
+      <div className={cx('mx-auto px-4 py-8', wide ? 'max-w-5xl' : 'max-w-3xl')}>
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+          <Link to="/tournois" className="flex items-center gap-2">
+            <img src="/favicon.svg" alt="" className="h-9 w-9" />
+            <span className="text-xl font-black">
+              Poker<span className="text-accent-500">Orga</span> <span className="hidden text-sm font-semibold text-zinc-400 sm:inline">· {subtitle}</span>
+            </span>
+          </Link>
+          <nav className="flex gap-1 text-sm">
+            <Link to="/tournois" className="btn-ghost btn-sm">
+              <Compass size={14} /> <span className="whitespace-nowrap">Tournois<span className="hidden sm:inline"> & clubs</span></span>
+            </Link>
+            <Link to={me.data ? '/joueur/espace' : '/joueur'} className="btn-ghost btn-sm">
+              <UserRound size={14} /> <span className="max-w-32 truncate whitespace-nowrap">{me.data ? me.data.pseudo : 'Espace joueur'}</span>
+            </Link>
+          </nav>
         </div>
         {children}
       </div>
@@ -108,6 +120,7 @@ export function PlayerAuthPage() {
 }
 
 interface MyTournaments {
+  clubs: { name: string; city: string | null; pseudo: string; code: string; publicToken: string | null }[];
   registrations: { code: string | null; status: string; present: boolean; eventName: string; eventDate: string | null; eventTime: string | null; location: string | null; eventStatus: string; organizer: string | null }[];
   results: { tournament: string; date: string | null; rank: number; players: number; prize: number | null; prizeLabel: string | null; kills: number }[];
 }
@@ -183,13 +196,27 @@ export function PlayerSpacePage() {
             <button className="btn-ghost btn-sm" disabled={!f.pseudo.trim()} onClick={() => act(() => api.patch('/player/me', f), 'Profil mis à jour.')}>
               Enregistrer
             </button>
+            <div className="border-t border-white/10 pt-3">
+              <Toggle
+                checked={p.discoverable}
+                onChange={(v) => act(() => api.patch('/player/me', { discoverable: v }), v ? 'Les organisateurs peuvent vous trouver.' : 'Vous n’apparaissez plus dans la recherche.')}
+                label="Les organisateurs peuvent me trouver par mon pseudo"
+                hint="Pour vous ajouter directement à leur club ou à un tournoi. Seuls votre pseudo, votre prénom et l’initiale de votre nom sont visibles, jamais votre email."
+              />
+            </div>
           </div>
         </div>
 
         <div className="card p-6">
           <h2 className="mb-3 font-bold">Mes tournois</h2>
           {!t.data?.registrations.length ? (
-            <Empty title="Aucune préinscription">Inscrivez-vous depuis le lien partagé par un organisateur, en restant connecté.</Empty>
+            <Empty title="Aucune préinscription">
+              Trouvez un tournoi dans{' '}
+              <Link to="/tournois" className="text-accent-300 underline">
+                l’annuaire des tournois
+              </Link>{' '}
+              ou utilisez le lien partagé par un organisateur, en restant connecté.
+            </Empty>
           ) : (
             <ul className="divide-y divide-white/5">
               {t.data.registrations.map((r, i) => (
@@ -230,6 +257,32 @@ export function PlayerSpacePage() {
             </ul>
           )}
         </div>
+
+        {!!t.data?.clubs.length && (
+          <div className="card p-6">
+            <h2 className="mb-3 font-bold">Mes clubs</h2>
+            <ul className="divide-y divide-white/5">
+              {t.data.clubs.map((c) => (
+                <li key={c.code} className="flex flex-wrap items-center gap-3 py-3">
+                  <IdCard size={18} className="text-accent-400" />
+                  <div className="min-w-40 flex-1">
+                    <p className="font-semibold">{c.name}</p>
+                    <p className="text-xs text-zinc-400">
+                      Adhérent · {c.pseudo}
+                      {c.city ? ` · ${c.city}` : ''}
+                    </p>
+                  </div>
+                  {c.publicToken && (
+                    <Link to={`/p/club/${c.publicToken}`} className="btn-ghost btn-sm">
+                      Page du club
+                    </Link>
+                  )}
+                </li>
+              ))}
+            </ul>
+            <p className="mt-2 text-xs text-zinc-500">Votre QR ci-dessus sert aussi de carte membre à l’accueil.</p>
+          </div>
+        )}
 
         <div className="card p-6">
           <h2 className="mb-3 font-bold">Mes résultats</h2>

@@ -1,6 +1,6 @@
 # PokerOrga
 
-Outil auto-hébergé d'organisation de tournois de poker : timer synchronisé multi-écrans (PC, TV, téléphone), gestion des joueurs et des tables, structures, places payées, sessions Multi Sit-and-Go, championnats, planning avec inscriptions en ligne et pointage QR, tournois flights multi-jours, horloge liée entre lives, module « Mon club » (adhérents, cotisations, cartes membres), compte joueur avec QR personnel, outils publics (générateur de structure, calculateur de payout).
+Outil auto-hébergé d'organisation de tournois de poker : timer synchronisé multi-écrans (PC, TV, téléphone), gestion des joueurs et des tables, structures, places payées, sessions Multi Sit-and-Go, championnats, planning avec inscriptions en ligne et pointage QR, tournois flights multi-jours, horloge liée entre lives, module « Mon club » (adhérents, cotisations, cartes membres), compte joueur avec QR personnel, recherche de joueurs connus (adhérents, habitués, comptes joueurs), annuaire public des tournois et des clubs (/tournois), outils publics (générateur de structure, calculateur de payout).
 
 - Documentation fonctionnelle : [docs/01-ANALYSE-FONCTIONNELLE.md](docs/01-ANALYSE-FONCTIONNELLE.md)
 - Plan & spécifications techniques (document principal) : [docs/00-PLAN-ET-SPECS-TECHNIQUES.md](docs/00-PLAN-ET-SPECS-TECHNIQUES.md)
@@ -60,7 +60,7 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-La commande builde l'application puis la lance sur le port 8090 (`E2E_SKIP_BUILD=1` pour réutiliser le build existant, `npm run test:e2e:ui` pour le mode interactif). Les scénarios (`e2e/`) couvrent : authentification, timer (play/pause, niveaux, sortant, re-entry, mode TV), synchronisation multi-écrans et horloge liée, réglages (titre, format, import CSV, tirage des sièges, plan public, structure), fin de tournoi → championnat → historique, planning (inscriptions publiques, liste d'attente, import), Mon club (création, adhérent, demande publique, pointage QR), flights, pages publiques, compte joueur et vue mobile.
+La commande builde l'application puis la lance sur le port 8090 (`E2E_SKIP_BUILD=1` pour réutiliser le build existant, `npm run test:e2e:ui` pour le mode interactif). Les scénarios (`e2e/`) couvrent : authentification, timer (play/pause, niveaux, sortant, re-entry, mode TV), synchronisation multi-écrans et horloge liée, réglages (titre, format, import CSV, tirage des sièges, plan public, structure), fin de tournoi → championnat → historique, planning (inscriptions publiques, liste d'attente, import), Mon club (création, adhérent, demande publique, pointage QR), flights, pages publiques, compte joueur, annuaire public et recherche de joueurs, et vue mobile.
 
 La CI GitHub Actions (`.github/workflows/ci.yml`) enchaîne typecheck, tests unitaires, tests E2E et test de fumée de l'API sur une base PostgreSQL de service. Un second job construit l'image Docker, démarre la stack `docker compose` et rejoue le test de fumée sur le conteneur (:8080). Sur `main`, l'image est ensuite publiée sur `ghcr.io/huugueau/pokerorga-app`.
 

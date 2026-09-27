@@ -265,6 +265,8 @@ export const events = pgTable('events', {
   description: text('description'),
   options: jsonb('options').$type<EventOption[]>().notNull().default([]),
   status: text('status').$type<'draft' | 'open' | 'closed' | 'imported'>().notNull().default('draft'),
+  /** Affiché dans l'annuaire public des tournois (/tournois). */
+  listed: boolean('listed').notNull().default(false),
   publicToken: text('public_token').notNull().unique(),
   tournamentId: uuid('tournament_id'),
   createdAt: ts('created_at').notNull().defaultNow(),
@@ -310,6 +312,8 @@ export const clubs = pgTable('clubs', {
   logoAssetId: uuid('logo_asset_id'),
   roles: jsonb('roles').$type<ClubRole[]>().notNull().default([]),
   published: boolean('published').notNull().default(false),
+  /** Affiché dans l'annuaire public des clubs (/tournois). */
+  listed: boolean('listed').notNull().default(false),
   publicToken: text('public_token').notNull().unique(),
   createdAt: ts('created_at').notNull().defaultNow(),
 });
@@ -451,5 +455,7 @@ export const playerAccounts = pgTable('player_accounts', {
   firstName: text('first_name'),
   lastName: text('last_name'),
   qrCode: text('qr_code').notNull().unique(),
+  /** Trouvable par pseudo dans la recherche des organisateurs (email jamais exposé). */
+  discoverable: boolean('discoverable').notNull().default(true),
   createdAt: ts('created_at').notNull().defaultNow(),
 });

@@ -3,7 +3,8 @@ import { formatMoney } from '@pokerorga/shared';
 import { ArrowLeft, CalendarDays, Check, Copy, Download, ExternalLink, Import, MapPin, Pencil, Plus, Trash2, UserCheck, X } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { cx, Empty, fmtDate, Loading, Modal, NumberField, PageHeader, Section, Segmented, useConfirm, useToast } from '../components/ui';
+import { LinkedChip, PlayerSearchInput, type PlayerLink } from '../components/PlayerSearch';
+import { cx, Empty, fmtDate, Loading, Modal, NumberField, PageHeader, Section, Segmented, Toggle, useConfirm, useToast } from '../components/ui';
 import { api, ApiError } from '../lib/api';
 
 export interface EventRow {
@@ -20,6 +21,7 @@ export interface EventRow {
   description: string | null;
   options: { id: string; label: string }[];
   status: 'draft' | 'open' | 'closed' | 'imported';
+  listed: boolean;
   publicToken: string;
   tournamentId: string | null;
   counts?: Record<string, number>;
@@ -442,6 +444,16 @@ export function EventDetailPage() {
                 </div>
               </div>
             )}
+            {!locked && (
+              <div className="mt-3 border-t border-white/10 pt-3">
+                <Toggle
+                  checked={e.listed}
+                  onChange={(v) => act(() => api.patch(`/events/${e.id}`, { listed: v }), v ? 'Événement affiché dans l’annuaire public.' : 'Événement retiré de l’annuaire public.')}
+                  label="Afficher dans l’annuaire public"
+                  hint={e.status === 'draft' ? 'Sera visible sur /tournois une fois publié.' : 'Visible par tous sur la page « Tournois & clubs » (/tournois).'}
+                />
+              </div>
+            )}
           </Section>
           <Section title="Infos">
             <dl className="space-y-1.5 text-sm">
@@ -561,6 +573,7 @@ function ImportModal({ event, regs, onClose, onDone }: { event: EventRow; regs: 
 function AddRegistration({ eventId, options, onClose }: { eventId: string; options: EventRow['options']; onClose: () => void }) {
   const toast = useToast();
   const [f, setF] = useState({ pseudo: '', firstName: '', lastName: '', email: '' });
+  const [link, setLink] = useState<PlayerLink | null>(null);
   return (
     <Modal
       open
@@ -572,7 +585,7 @@ function AddRegistration({ eventId, options, onClose }: { eventId: string; optio
           disabled={!f.pseudo.trim()}
           onClick={async () => {
             try {
-              await api.post(`/events/${eventId}/registrations`, { ...f, answers: Object.fromEntries(options.map((o) => [o.id, 'unknown'])) });
+              await api.post(`/events/${eventId}/registrations`, { ...f, playerAccountId: link?.playerAccountId ?? null, answers: Object.fromEntries(options.map((o) => [o.id, 'unknown'])) });
               toast('Participant ajouté (validé).');
               onClose();
             } catch (e) {
@@ -587,7 +600,21 @@ function AddRegistration({ eventId, options, onClose }: { eventId: string; optio
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="sm:col-span-2">
           <label className="label">Pseudo *</label>
-          <input className="input" value={f.pseudo} onChange={(e) => setF({ ...f, pseudo: e.target.value })} data-autofocus />
+          <PlayerSearchInput
+            autoFocus
+            value={f.pseudo}
+            placeholder="Pseudo ou rechercher un joueur…"
+            onChange={(v) => {
+              setF({ ...f, pseudo: v });
+              setLink(null);
+            }}
+            onPick={(s) => {
+              const initialOnly = !!s.lastName && s.lastName.endsWith('.') && s.lastName.length <= 2;
+              setF({ ...f, pseudo: s.pseudo, firstName: s.firstName ?? '', lastName: initialOnly ? '' : (s.lastName ?? '') });
+              setLink(s.playerAccountId ? { memberId: null, playerAccountId: s.playerAccountId, label: 'Compte joueur (verra l’inscription dans son espace)' } : null);
+            }}
+          />
+          <LinkedChip link={link} onClear={() => setLink(null)} />
         </div>
         <div>
           <label className="label">Prénom</label>

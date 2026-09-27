@@ -24,7 +24,7 @@ import {
 } from '@pokerorga/shared';
 import { z } from 'zod';
 import { db, schema } from '../db';
-import { bad, bus, conflict, HttpError, idParam, parse, publicToken, sendCsv, userId } from '../lib';
+import { bad, bus, conflict, HttpError, idParam, parse, parsePatch, publicToken, sendCsv, userId } from '../lib';
 import {
   buildSnapshot,
   createTournament,
@@ -128,7 +128,7 @@ export async function tournamentRoutes(app: FastifyInstance) {
 
   app.patch('/tournaments/:id', async (req) => {
     const { id } = parse(idParam, req.params);
-    const body = parse(tournamentPatchSchema, req.body);
+    const body = parsePatch(tournamentPatchSchema, req.body, ['settings', 'theme']);
     const [u] = await db.select().from(users).where(eq(users.id, userId(req)));
     await mutateTournament(id, userId(req), async (ctx) => {
       const { t, patch, now } = ctx;

@@ -81,6 +81,9 @@ export const playerInputSchema = z.object({
   pseudo: z.string().trim().min(1, 'Le pseudo est obligatoire.').max(40),
   firstName: z.string().trim().max(60).nullish(),
   lastName: z.string().trim().max(60).nullish(),
+  /** Lien vers un adhérent du club / un compte joueur (choisi via la recherche). */
+  memberId: z.string().uuid().nullish(),
+  playerAccountId: z.string().uuid().nullish(),
 });
 
 export const registerSchema = z.object({

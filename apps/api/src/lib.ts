@@ -20,6 +20,24 @@ export function parse<T extends ZodType>(schema: T, data: unknown): z.infer<T> {
   return schema.parse(data);
 }
 
+const isPlain = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v);
+
+/** Ne garde que les clés réellement envoyées ; `nested` : sous-objets eux-mêmes partiels à filtrer aussi. */
+function onlySent<T>(parsed: T, raw: unknown, nested: string[] = []): T {
+  if (!isPlain(parsed) || !isPlain(raw)) return parsed;
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(parsed)) if (k in raw) out[k] = nested.includes(k) ? onlySent(v, raw[k]) : v;
+  return out as T;
+}
+
+/**
+ * Parse d'une modification partielle : zod 4 applique les `.default()` même dans un `.partial()`,
+ * ce qui écraserait les champs non envoyés. On ne conserve donc que les clés présentes dans la requête.
+ */
+export function parsePatch<T extends ZodType>(schema: T, data: unknown, nested: string[] = []): z.infer<T> {
+  return onlySent(schema.parse(data), data, nested);
+}
+
 export function zodMessage(e: ZodError): string {
   const issue = e.issues[0];
   if (!issue) return 'Données invalides.';

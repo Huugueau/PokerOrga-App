@@ -1,6 +1,7 @@
 import { formatMoney, tableCapacity, type Player, type SeatRef, type TournamentSnapshot } from '@pokerorga/shared';
 import { Gift, Search, UserPlus } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { LinkedChip, linkLabel, PlayerSearchInput, type PlayerLink } from '../../components/PlayerSearch';
 import { cx, Modal, useConfirm } from '../../components/ui';
 import { api, ApiError } from '../../lib/api';
 import { useLiveAction } from './useLive';
@@ -198,6 +199,8 @@ export function AddPlayerModal({ snap, onClose, lateRegOpen }: { snap: Tournamen
   const run = useLiveAction(t.id);
   const confirm = useConfirm();
   const [form, setForm] = useState({ pseudo: '', firstName: '', lastName: '' });
+  const [link, setLink] = useState<PlayerLink | null>(null);
+  const inTournament = useMemo(() => new Set(snap.players.map((p) => p.pseudo.toLowerCase())), [snap.players]);
   const [group, setGroup] = useState<number | ''>('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -212,9 +215,10 @@ export function AddPlayerModal({ snap, onClose, lateRegOpen }: { snap: Tournamen
     setBusy(true);
     setError(null);
     try {
-      await api.post(`/tournaments/${t.id}/players`, { ...form, override, ...(t.settings.multiSng && group !== '' ? { sngGroup: group } : {}) });
+      await api.post(`/tournaments/${t.id}/players`, { ...form, memberId: link?.memberId ?? null, playerAccountId: link?.playerAccountId ?? null, override, ...(t.settings.multiSng && group !== '' ? { sngGroup: group } : {}) });
       await run(async () => null, `${form.pseudo} ajouté`);
       setForm({ pseudo: '', firstName: '', lastName: '' });
+      setLink(null);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Impossible d’ajouter le joueur.');
     } finally {
@@ -226,7 +230,21 @@ export function AddPlayerModal({ snap, onClose, lateRegOpen }: { snap: Tournamen
       <form onSubmit={submit} className="space-y-3">
         <div>
           <label className="label">Pseudo *</label>
-          <input className="input" value={form.pseudo} onChange={(e) => setForm({ ...form, pseudo: e.target.value })} data-autofocus maxLength={40} />
+          <PlayerSearchInput
+            autoFocus
+            value={form.pseudo}
+            exclude={inTournament}
+            placeholder="Pseudo, ou rechercher un joueur connu…"
+            onChange={(v) => {
+              setForm({ ...form, pseudo: v });
+              setLink(null);
+            }}
+            onPick={(s) => {
+              setForm({ pseudo: s.pseudo, firstName: s.firstName ?? '', lastName: s.lastName?.endsWith('.') && s.lastName.length <= 2 ? '' : (s.lastName ?? '') });
+              setLink(s.memberId || s.playerAccountId ? { memberId: s.memberId, playerAccountId: s.playerAccountId, label: linkLabel(s) } : null);
+            }}
+          />
+          <LinkedChip link={link} onClear={() => setLink(null)} />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>

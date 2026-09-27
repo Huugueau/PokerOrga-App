@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { LinkedChip, PlayerSearchInput, type PlayerLink as SearchLink } from '../components/PlayerSearch';
 import { QrCode } from '../components/QrCode';
 import { cx, Empty, fmtDate, Loading, Modal, NumberField, PageHeader, Section, Segmented, Toggle, useConfirm, useToast } from '../components/ui';
 import { api, ApiError, assetUrl } from '../lib/api';
@@ -35,6 +36,7 @@ export interface Club {
   logoAssetId: string | null;
   roles: ClubRole[];
   published: boolean;
+  listed: boolean;
   publicToken: string;
 }
 export interface Season {
@@ -443,13 +445,14 @@ function MemberModal({ club, season, member, onClose }: { club: Club; season: Se
     membershipType: member?.membershipType ?? ('live' as MType),
     roleIds: member?.roleIds ?? [],
   });
+  const [link, setLink] = useState<SearchLink | null>(null);
   const [pay, setPay] = useState({ kind: 'dues' as 'dues' | 'donation', amount: season.duesAmount || (null as number | null), method: 'cash', paidOn: new Date().toISOString().slice(0, 10) });
   const [code, setCode] = useState(member?.code ?? '');
   const err = (e: unknown) => toast(e instanceof ApiError ? e.message : 'Erreur', 'error');
   const save = async () => {
     try {
       if (member) await api.patch(`/club/members/${member.id}`, f);
-      else await api.post('/club/members', { ...f, seasonId: season.open ? season.id : undefined });
+      else await api.post('/club/members', { ...f, playerAccountId: link?.playerAccountId ?? null, seasonId: season.open ? season.id : undefined });
       toast(member ? 'Adhérent enregistré.' : 'Adhérent ajouté.');
       onClose();
     } catch (e) {
@@ -503,7 +506,28 @@ function MemberModal({ club, season, member, onClose }: { club: Club; season: Se
           <div className="grid gap-3 sm:grid-cols-3">
             <div>
               <label className="label">Pseudo *</label>
-              <input className="input" value={f.pseudo} onChange={(e) => setF({ ...f, pseudo: e.target.value })} data-autofocus />
+              {member ? (
+                <input className="input" value={f.pseudo} onChange={(e) => setF({ ...f, pseudo: e.target.value })} data-autofocus />
+              ) : (
+                <>
+                  <PlayerSearchInput
+                    autoFocus
+                    hideMembers
+                    value={f.pseudo}
+                    placeholder="Pseudo ou rechercher…"
+                    onChange={(v) => {
+                      setF({ ...f, pseudo: v });
+                      setLink(null);
+                    }}
+                    onPick={(s) => {
+                      const initialOnly = !!s.lastName && s.lastName.endsWith('.') && s.lastName.length <= 2;
+                      setF({ ...f, pseudo: s.pseudo, firstName: s.firstName ?? f.firstName, lastName: initialOnly ? f.lastName : (s.lastName ?? f.lastName) });
+                      setLink(s.playerAccountId ? { memberId: null, playerAccountId: s.playerAccountId, label: 'Compte joueur ' + s.pseudo } : null);
+                    }}
+                  />
+                  <LinkedChip link={link} onClear={() => setLink(null)} />
+                </>
+              )}
             </div>
             <div>
               <label className="label">Prénom</label>
@@ -780,6 +804,11 @@ function SettingsTab({ club, seasons }: { club: Club; seasons: Season[] }) {
           <div className="border-t border-white/10 pt-4">
             <Toggle checked={club.published} onChange={(v) => patch({ published: v }, v ? 'Page club publiée.' : 'Page club dépubliée.')} label={club.published ? 'Page publique en ligne' : 'Page publique non publiée'} hint="Présentation du club et formulaire de demande d’adhésion" />
             {club.published && (
+              <div className="mt-3">
+                <Toggle checked={club.listed} onChange={(v) => patch({ listed: v }, v ? 'Club affiché dans l’annuaire public.' : 'Club retiré de l’annuaire public.')} label="Afficher dans l’annuaire des clubs" hint="Visible par tous sur la page « Tournois & clubs » (/tournois)" />
+              </div>
+            )}
+            {club.published && (
               <div className="mt-3 flex gap-2">
                 <button
                   className="btn-ghost btn-sm"
@@ -951,10 +980,11 @@ export function ClubCardsPage() {
 function PlayerLink({ member, onDone }: { member: Member; onDone: () => void }) {
   const toast = useToast();
   const [email, setEmail] = useState('');
-  const send = async (playerEmail: string | null) => {
+  const [search, setSearch] = useState('');
+  const send = async (playerEmail: string | null, playerAccountId?: string) => {
     try {
-      await api.patch(`/club/members/${member.id}`, { playerEmail });
-      toast(playerEmail ? 'Fiche liée au compte joueur.' : 'Liaison retirée.');
+      await api.patch(`/club/members/${member.id}`, playerAccountId ? { playerAccountId } : { playerEmail });
+      toast(playerEmail || playerAccountId ? 'Fiche liée au compte joueur.' : 'Liaison retirée.');
       onDone();
     } catch (e) {
       toast(e instanceof ApiError ? e.message : 'Erreur', 'error');
@@ -971,11 +1001,14 @@ function PlayerLink({ member, onDone }: { member: Member; onDone: () => void }) 
           </button>
         </div>
       ) : (
-        <div className="flex gap-1.5">
-          <input className="input !py-1.5 text-xs" placeholder="Email du compte" value={email} onChange={(e) => setEmail(e.target.value)} />
-          <button className="btn-ghost btn-sm" disabled={!email.includes('@')} onClick={() => send(email)}>
-            Lier
-          </button>
+        <div className="space-y-1.5">
+          <PlayerSearchInput accountsOnly value={search} onChange={setSearch} placeholder="Rechercher un compte…" onPick={(s) => s.playerAccountId && send(null, s.playerAccountId)} />
+          <div className="flex gap-1.5">
+            <input className="input !py-1.5 text-xs" placeholder="ou email du compte" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <button className="btn-ghost btn-sm" disabled={!email.includes('@')} onClick={() => send(email)}>
+              Lier
+            </button>
+          </div>
         </div>
       )}
     </div>

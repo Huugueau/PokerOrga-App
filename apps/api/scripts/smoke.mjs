@@ -222,4 +222,32 @@ const m2 = await call('POST', '/club/members', { pseudo: 'JoueurQR-club' });
 await call('PATCH', `/club/members/${m2.id}`, { playerEmail: pl.player.email });
 const pc2 = await call('POST', `/tournaments/${pLive}/checkin`, { code: pl.player.qrCode });
 assert(pc2.kind === 'member', 'compte joueur lié à une fiche adhérent → reconnu comme adhérent');
+
+// ---- Modifications partielles : les champs non envoyés ne reviennent pas à leur valeur par défaut ----
+const { club: myClub } = await call('GET', '/club');
+const roleId = myClub.roles[0].id;
+const m3 = await call('POST', '/club/members', { pseudo: 'Rôles', membershipType: 'both', roleIds: [roleId] });
+await call('PATCH', `/club/members/${m3.id}`, { note: 'ok' });
+const m3b = (await call('GET', '/club/members')).members.find((m) => m.id === m3.id);
+assert(m3b.membershipType === 'both' && m3b.roleIds[0] === roleId && m3b.note === 'ok', 'PATCH adhérent partiel : type et rôles conservés');
+const ev3 = await call('POST', '/events', { name: 'Partiel', buyin: 25, maxPerTable: 8 });
+const ev3b = await call('PATCH', `/events/${ev3.id}`, { listed: true });
+assert(ev3b.buyin === 25 && ev3b.maxPerTable === 8 && ev3b.listed === true, 'PATCH événement partiel : buy-in et format conservés');
+const { id: t3 } = await call('POST', '/tournaments', { title: 'Partiel' });
+await call('PATCH', `/tournaments/${t3}`, { settings: { multiSng: true, rebuyLimit: 2 } });
+await call('PATCH', `/tournaments/${t3}`, { settings: { buyin: 15 } });
+const t3b = await call('GET', `/tournaments/${t3}/full`);
+assert(t3b.tournament.settings.multiSng === true && t3b.tournament.settings.rebuyLimit === 2, 'PATCH réglages partiel : Multi SnG et limite de recaves conservés');
+
+// ---- Annuaire public et recherche de joueurs ----
+await call('POST', `/events/${ev3.id}/status`, { status: 'open' });
+const dir = await call('GET', '/public/directory');
+assert(dir.events.some((e) => e.name === 'Partiel' && e.buyin === 25), 'annuaire public : événement listé visible');
+assert(!dir.events.some((e) => e.name === 'Tournoi joueurs'), 'annuaire public : événement non listé absent');
+const found = await call('GET', '/directory/players?q=JoueurQR');
+const acc = found.players.find((s) => s.playerAccountId === pl.player.id);
+assert(acc && !('email' in acc), 'recherche : compte joueur trouvé, sans email');
+await pcall('PATCH', '/player/me', { discoverable: false });
+const hidden = await call('GET', '/directory/players?q=JoueurQR');
+assert(!hidden.players.some((s) => s.key === 'a:' + pl.player.id), 'recherche : compte non trouvable masqué (sauf joueurs déjà connus de l’organisateur)');
 console.log('\nTous les tests de fumée sont passés.');

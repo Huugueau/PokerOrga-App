@@ -14,6 +14,7 @@ import {
 import { z } from 'zod';
 import { schema, type Tx } from '../db';
 import { bad, conflict, idParam, notFound, parse, userId } from '../lib';
+import { sanitizeLinks } from './directory';
 import { baseBounty, ensureMysteryFrozen, loadPlayers, loadTables, mutateTournament, rebalance, toTable, type MutationCtx, type PlayerRow } from '../services/tournament';
 
 const { players, tournamentTables, playerActions } = schema;
@@ -125,7 +126,8 @@ export async function playerRoutes(app: FastifyInstance) {
 
   app.post('/tournaments/:id/players', async (req) => {
     const { id } = parse(idParam, req.params);
-    const body = parse(playerInputSchema.extend({ override: z.boolean().optional() }), req.body);
+    const parsed = parse(playerInputSchema.extend({ override: z.boolean().optional() }), req.body);
+    const [body] = await sanitizeLinks(userId(req), [parsed]);
     return mutateTournament(id, userId(req), async (ctx) => {
       if (ctx.t.status === 'running' && !lateRegOpen(ctx.t, ctx.now) && !body.override) {
         throw conflict("La late registration est terminée. L'ajout nécessite une dérogation explicite.");
@@ -141,7 +143,8 @@ export async function playerRoutes(app: FastifyInstance) {
   app.post('/tournaments/:id/players/import', async (req) => {
     const { id } = parse(idParam, req.params);
     const body = parse(z.object({ rows: z.array(playerInputSchema).max(500) }), req.body);
-    return mutateTournament(id, userId(req), async (ctx) => insertPlayers(ctx, body.rows));
+    const rows = await sanitizeLinks(userId(req), body.rows);
+    return mutateTournament(id, userId(req), async (ctx) => insertPlayers(ctx, rows));
   });
 
   app.patch('/tournaments/:id/players/:pid', async (req) => {
