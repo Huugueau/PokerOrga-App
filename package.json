@@ -13,9 +13,12 @@
     "start": "npm run start -w @pokerorga/api",
     "test": "npm run test -w @pokerorga/shared && npm run test -w @pokerorga/api",
     "typecheck": "npm run typecheck -w @pokerorga/shared && npm run typecheck -w @pokerorga/api && npm run typecheck -w @pokerorga/web",
-    "db:generate": "npm run db:generate -w @pokerorga/api"
+    "db:generate": "npm run db:generate -w @pokerorga/api",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "concurrently": "^9.2.1",
     "embedded-postgres": "^18.4.0-beta.17",
     "typescript": "~5.9.3"

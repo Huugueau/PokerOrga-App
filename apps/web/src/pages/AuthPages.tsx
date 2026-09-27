@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Eye, EyeOff } from 'lucide-react';
 import { useState } from 'react';
-import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, Navigate, useSearchParams } from 'react-router-dom';
 import { cx, Loading } from '../components/ui';
 import { api, ApiError } from '../lib/api';
 import { useMe } from '../lib/auth';
@@ -9,7 +9,6 @@ import { useMe } from '../lib/auth';
 export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
   const me = useMe();
   const qc = useQueryClient();
-  const nav = useNavigate();
   const [sp] = useSearchParams();
   const cfg = useQuery({ queryKey: ['auth-config'], queryFn: () => api.get<{ allowRegistration: boolean }>('/auth/config') });
   const [email, setEmail] = useState('');
@@ -18,6 +17,9 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
   const [show, setShow] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // destination choisie après connexion / inscription (prioritaire sur la redirection générique)
+  const [target, setTarget] = useState<string | null>(null);
+  if (target) return <Navigate to={target} replace />;
   if (me.isLoading) return <Loading />;
   if (me.data) return <Navigate to={sp.get('next') || '/'} replace />;
 
@@ -29,8 +31,8 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
     setBusy(true);
     try {
       const r = await api.post<{ user: unknown }>(mode === 'login' ? '/auth/login' : '/auth/register', mode === 'login' ? { email, password } : { email, password, acceptTerms: true });
+      setTarget(sp.get('next') || (mode === 'register' ? '/account?welcome=1' : '/'));
       qc.setQueryData(['me'], r.user);
-      nav(sp.get('next') || (mode === 'register' ? '/account?welcome=1' : '/'), { replace: true });
     } catch (e) {
       setErr(e instanceof ApiError ? e.message : 'Erreur réseau. Vérifiez votre connexion.');
     } finally {

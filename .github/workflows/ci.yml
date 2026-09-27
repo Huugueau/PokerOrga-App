@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: pokerorga
+          POSTGRES_PASSWORD: pokerorga
+          POSTGRES_DB: pokerorga
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U pokerorga"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgres://pokerorga:pokerorga@localhost:5432/pokerorga
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npx playwright install --with-deps chromium
+      - name: Tests E2E (Playwright)
+        run: npm run test:e2e
+      - name: Test de bout en bout de l'API
+        run: |
+          PORT=3000 NODE_ENV=production node apps/api/dist/server.js &
+          for i in $(seq 1 30); do curl -sf http://localhost:3000/api/health && break; sleep 1; done
+          npm run smoke -w @pokerorga/api
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            playwright-report
+            test-results
+          retention-days: 7

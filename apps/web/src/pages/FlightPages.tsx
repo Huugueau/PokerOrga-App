@@ -426,7 +426,8 @@ function AddDayModal({ seriesId, stage, days, onClose }: { seriesId: string; sta
 function CloseDayModal({ seriesId, day, target, onClose }: { seriesId: string; day: Day; target: string; onClose: () => void }) {
   const toast = useToast();
   const confirm = useConfirm();
-  const q = useQuery({ queryKey: ['live', day.tournamentId], queryFn: () => api.get<TournamentSnapshot>(`/tournaments/${day.tournamentId}/full`) });
+  // lecture fraîche : le snapshot du live en cache peut dater d'avant les dernières éliminations
+  const q = useQuery({ queryKey: ['flight-close', day.tournamentId], queryFn: () => api.get<TournamentSnapshot>(`/tournaments/${day.tournamentId}/full`), staleTime: 0, gcTime: 0 });
   const [stacks, setStacks] = useState<Record<string, number | null>>({});
   const [busy, setBusy] = useState(false);
   if (q.isLoading || !q.data) return <Loading />;

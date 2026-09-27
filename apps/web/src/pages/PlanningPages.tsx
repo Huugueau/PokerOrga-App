@@ -497,7 +497,7 @@ function ImportModal({ event, regs, onClose, onDone }: { event: EventRow; regs: 
   const [tid, setTid] = useState('');
   const validated = regs.filter((r) => r.status === 'validated');
   const count = mode === 'present' ? validated.filter((r) => r.present).length : validated.length;
-  const target = tid || lives.data?.tournaments[0]?.id || '';
+  const target = tid || lives.data?.tournaments[0]?.id || (lives.data ? 'new' : '');
   return (
     <Modal
       open
@@ -513,10 +513,11 @@ function ImportModal({ event, regs, onClose, onDone }: { event: EventRow; regs: 
             disabled={!target || count === 0}
             onClick={async () => {
               try {
-                const r = await api.post<{ added: string[]; skipped: string[] }>(`/events/${event.id}/import`, { tournamentId: target, mode });
+                const tournamentId = target === 'new' ? (await api.post<{ id: string }>('/tournaments', { title: event.name })).id : target;
+                const r = await api.post<{ added: string[]; skipped: string[] }>(`/events/${event.id}/import`, { tournamentId, mode });
                 toast(`${r.added.length} joueur(s) importé(s).`);
                 onDone();
-                nav(`/live/${target}`);
+                nav(`/live/${tournamentId}`);
               } catch (e) {
                 toast(e instanceof ApiError ? e.message : 'Import des joueurs dans le tournoi impossible.', 'error');
               }
@@ -543,6 +544,7 @@ function ImportModal({ event, regs, onClose, onDone }: { event: EventRow; regs: 
         <div>
           <label className="label">Tournoi de destination</label>
           <select className="input" value={target} onChange={(e) => setTid(e.target.value)}>
+            <option value="new">Nouveau tournoi « {event.name} »</option>
             {lives.data?.tournaments.map((t) => (
               <option key={t.id} value={t.id}>
                 {t.title} ({t.status === 'prepared' ? 'préparé' : 'en cours'})

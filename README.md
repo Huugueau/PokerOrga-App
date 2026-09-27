@@ -49,6 +49,20 @@ npm run smoke -w @pokerorga/api           # test de bout en bout de l'API (serve
 npm run typecheck
 ```
 
+Tests E2E navigateur (Playwright, Chromium) — la base PostgreSQL de dev doit tourner :
+
+```bash
+npx playwright install chromium
+```
+
+```bash
+npm run test:e2e
+```
+
+La commande builde l'application puis la lance sur le port 8090 (`E2E_SKIP_BUILD=1` pour réutiliser le build existant, `npm run test:e2e:ui` pour le mode interactif). Les scénarios (`e2e/`) couvrent : authentification, timer (play/pause, niveaux, sortant, re-entry, mode TV), synchronisation multi-écrans et horloge liée, réglages (titre, format, import CSV, tirage des sièges, plan public, structure), fin de tournoi → championnat → historique, planning (inscriptions publiques, liste d'attente, import), Mon club (création, adhérent, demande publique, pointage QR), flights, pages publiques, compte joueur et vue mobile.
+
+La CI GitHub Actions (`.github/workflows/ci.yml`) enchaîne typecheck, tests unitaires, tests E2E et test de fumée de l'API sur une base PostgreSQL de service.
+
 ## Structure
 
 ```
