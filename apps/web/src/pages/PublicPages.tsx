@@ -22,6 +22,7 @@ interface Plan {
   title: string;
   logoAssetId: string | null;
   maxPerTable: number;
+  finalTableSize?: number;
   version: number;
   stats: { activePlayers: number; totalEntries: number };
   tables: { number: number; isFinal: boolean; seats: { seat: number | null; pseudo: string }[] }[];
@@ -89,7 +90,7 @@ export function PublicPlanPage() {
               <div key={t.number} className={cx('card p-4', t.isFinal && 'border-accent-500/60')}>
                 <h2 className="mb-3 text-lg font-black">{t.isFinal ? '🏆 Table finale' : `Table ${t.number}`}</h2>
                 <ul className="space-y-1">
-                  {Array.from({ length: d.maxPerTable }, (_, i) => i + 1).map((s) => {
+                  {Array.from({ length: t.isFinal ? Math.max(d.maxPerTable, d.finalTableSize ?? 0) : d.maxPerTable }, (_, i) => i + 1).map((s) => {
                     const p = t.seats.find((x) => x.seat === s);
                     return (
                       <li key={s} className={cx('flex gap-3 rounded-lg px-3 py-1.5 text-sm', p ? 'bg-white/5' : 'text-zinc-600')}>
@@ -213,6 +214,7 @@ export function PublicRegisterPage() {
   const [answers, setAnswers] = useState<Record<string, 'yes' | 'no' | 'unknown'>>({});
   const [err, setErr] = useState<string | null>(null);
   const [done, setDone] = useState<string | null>(null);
+  const [position, setPosition] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
   if (q.isLoading) return <Loading />;
   if (q.error) return <PublicFrame><Empty title="Page d’inscription introuvable." /></PublicFrame>;
@@ -225,8 +227,9 @@ export function PublicRegisterPage() {
     if (e.options.some((o) => !answers[o.id])) return setErr('Merci de répondre à toutes les options.');
     setBusy(true);
     try {
-      const r = await api.post<{ status: string }>(`/public/events/${token}/register`, { ...f, answers });
+      const r = await api.post<{ status: string; position: number | null }>(`/public/events/${token}/register`, { ...f, answers });
       setDone(r.status);
+      setPosition(r.position);
       q.refetch();
     } catch (x) {
       setErr(x instanceof ApiError ? x.message : 'Inscription impossible.');
@@ -266,7 +269,7 @@ export function PublicRegisterPage() {
         <div className="card p-6">
           {done ? (
             <div className="py-6 text-center">
-              <p className="text-2xl font-black">{done === 'waitlist' ? "Vous êtes sur liste d'attente" : 'Inscription enregistrée.'}</p>
+              <p className="text-2xl font-black">{done === 'waitlist' ? `Liste d'attente${position ? ` — position n°${position}` : ''}` : 'Inscription enregistrée.'}</p>
               <p className="mt-2 text-sm text-zinc-400">{done === 'waitlist' ? "L'organisateur vous contactera si une place se libère." : "L'organisateur doit encore valider votre inscription."}</p>
             </div>
           ) : e.status !== 'open' ? (

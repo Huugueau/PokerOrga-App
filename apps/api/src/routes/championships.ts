@@ -115,7 +115,8 @@ export async function championshipRoutes(app: FastifyInstance) {
       z.object({
         name: z.string().trim().min(1, 'Le nom du championnat est requis.').max(30, '30 caractères maximum.'),
         type: z.enum(['mtt', 'sng']).default('mtt'),
-        bestResults: z.number().int().min(1).max(200).nullable().default(null),
+        bestResults: z.number().int().min(1).max(200).nullable().default(8),
+        pointsGrid: z.array(z.number().min(0).max(10000)).max(100).default([]),
       }),
       req.body,
     );
@@ -134,6 +135,7 @@ export async function championshipRoutes(app: FastifyInstance) {
       z.object({
         name: z.string().trim().min(1, 'Le nom du championnat est requis.').max(30, '30 caractères maximum.').optional(),
         bestResults: z.number().int().min(1).max(200).nullable().optional(),
+        pointsGrid: z.array(z.number().min(0).max(10000)).max(100).optional(),
         archived: z.boolean().optional(),
         published: z.boolean().optional(),
       }),
@@ -181,7 +183,7 @@ export async function championshipRoutes(app: FastifyInstance) {
           importId: imp.id,
           playerId: cpId,
           rank: p.finishRank!,
-          points: championshipPoints(entries, p.finishRank!),
+          points: c.pointsGrid.length > 0 ? (c.pointsGrid[p.finishRank! - 1] ?? 0) : championshipPoints(entries, p.finishRank!),
           kills: p.kills,
         });
       }

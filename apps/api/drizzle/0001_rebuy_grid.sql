@@ -1,0 +1,1 @@
+ALTER TABLE "championships" ADD COLUMN "points_grid" jsonb DEFAULT '[]'::jsonb NOT NULL;

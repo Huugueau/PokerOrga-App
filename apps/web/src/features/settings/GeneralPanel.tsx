@@ -97,6 +97,20 @@ export function GeneralPanel({ snap }: { snap: TournamentSnapshot }) {
           {s.entryFormat === 'rebuys' && (
             <div className="space-y-3">
               <p className="text-zinc-300">Recave au prix du buy-in, stack de départ ajouté. Possible jusqu'à la fin de la late registration.</p>
+              <div className="flex flex-wrap items-center gap-3">
+                <span>Recaves par joueur :</span>
+                <Segmented<number>
+                  size="sm"
+                  value={s.rebuyLimit}
+                  onChange={(v) => set({ rebuyLimit: v })}
+                  options={[
+                    { value: -1, label: 'Illimité' },
+                    { value: 1, label: '1 (double chance)' },
+                    { value: 2, label: '2' },
+                    { value: 3, label: '3' },
+                  ]}
+                />
+              </div>
               <Toggle checked={s.addonsEnabled} onChange={(v) => set({ addonsEnabled: v })} label="Activer les add-ons" hint="Un add-on par joueur" />
               {s.addonsEnabled && (
                 <div className="grid max-w-md grid-cols-2 gap-3">
@@ -140,6 +154,7 @@ export function GeneralPanel({ snap }: { snap: TournamentSnapshot }) {
             <div>
               <label className="label">Rake par entrée</label>
               <NumberField className="w-32" value={s.rake} suffix="€" onCommit={(v) => set({ rake: v ?? 0 })} />
+              <p className="mt-1 text-xs text-zinc-500">Payé en sus du buy-in, hors prize pool. Compté sur les entrées, re-entries et recaves (pas les add-ons). Collecté : {formatMoney(snap.stats.rakeTotal)}.</p>
             </div>
           )}
           <div className="self-end">
@@ -160,9 +175,9 @@ export function GeneralPanel({ snap }: { snap: TournamentSnapshot }) {
 
       <Section title="Tables" subtitle="Joueurs par table, table finale et équilibrage">
         <label className="label">Nombre de joueurs par table</label>
-        <Segmented<number> size="sm" value={s.maxPerTable} onChange={(v) => set({ maxPerTable: v, finalTableSize: Math.min(s.finalTableSize, v) })} options={[2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => ({ value: n, label: String(n), hint: FORMAT_LABELS[n] }))} />
+        <Segmented<number> size="sm" value={s.maxPerTable} onChange={(v) => set({ maxPerTable: v, finalTableSize: Math.min(s.finalTableSize, v + 1, 10) })} options={[2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => ({ value: n, label: String(n), hint: FORMAT_LABELS[n] }))} />
         <label className="label mt-4">Nombre de joueurs en table finale</label>
-        <Segmented<number> size="sm" value={s.finalTableSize} onChange={(v) => set({ finalTableSize: v })} options={[2, 3, 4, 5, 6, 7, 8, 9, 10].filter((n) => n <= s.maxPerTable).map((n) => ({ value: n, label: String(n) }))} />
+        <Segmented<number> size="sm" value={s.finalTableSize} onChange={(v) => set({ finalTableSize: v })} options={[2, 3, 4, 5, 6, 7, 8, 9, 10].filter((n) => n <= s.maxPerTable + 1).map((n) => ({ value: n, label: n === s.maxPerTable + 1 ? `${n} (+1 siège)` : String(n) }))} />
         <p className="mt-3 text-sm text-zinc-400">
           À {tp.beforeFinal.n} joueurs restants, les tables seront à {tp.beforeFinal.a} vs {tp.beforeFinal.b}. À {tp.finalAt} joueurs restants, fusion en table finale.
         </p>

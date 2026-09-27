@@ -15,6 +15,7 @@ export interface BountySettings {
 export interface TournamentSettings {
   entryFormat: EntryFormat;
   reentryLimit: number; // -1 = illimité
+  rebuyLimit: number; // -1 = illimité (1 = double chance)
   addonsEnabled: boolean;
   addonCost: number;
   addonStack: number;
@@ -23,6 +24,7 @@ export interface TournamentSettings {
   startStack: number;
   buyin: number;
   isFree: boolean;
+  /** Rake par entrée/recave, payé en sus du buy-in (hors prize pool). */
   rake: number;
   hidePayout: boolean;
   trackKills: boolean;
@@ -161,6 +163,7 @@ export interface TournamentStats {
   registered: number;
   prizePool: number;
   bountyPool: number;
+  rakeTotal: number;
   chipsInPlay: number;
   averageStack: number;
   tables: number;

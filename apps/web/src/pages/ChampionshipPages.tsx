@@ -10,6 +10,7 @@ interface Champ {
   name: string;
   type: 'mtt' | 'sng';
   bestResults: number | null;
+  pointsGrid: number[];
   archived: boolean;
   published: boolean;
   publicToken: string;
@@ -99,10 +100,11 @@ function CreateChampionship({ onClose }: { onClose: () => void }) {
   const toast = useToast();
   const [name, setName] = useState('');
   const [type, setType] = useState<'mtt' | 'sng'>('mtt');
-  const [best, setBest] = useState<number | null>(null);
+  const [best, setBest] = useState<number | null>(8);
+  const [grid, setGrid] = useState<number[]>([]);
   const submit = async () => {
     try {
-      const c = await api.post<Champ>('/championships', { name, type, bestResults: best });
+      const c = await api.post<Champ>('/championships', { name, type, bestResults: best, pointsGrid: type === 'sng' ? grid : [] });
       qc.invalidateQueries({ queryKey: ['championships'] });
       nav(`/championships/${c.id}`);
     } catch (e) {
@@ -142,6 +144,7 @@ function CreateChampionship({ onClose }: { onClose: () => void }) {
           />
         </div>
         <JokersField value={best} onChange={setBest} />
+        {type === 'sng' && <PointsGridField value={grid} onChange={setGrid} />}
       </div>
     </Modal>
   );
@@ -335,6 +338,9 @@ export function ChampionshipDetailPage() {
           </Section>
           <Section title="Jokers" subtitle="Nombre de meilleurs résultats comptabilisés">
             <JokersField value={c.bestResults} onChange={(b) => patch({ bestResults: b })} />
+          </Section>
+          <Section title="Barème de points" subtitle={c.pointsGrid.length ? 'Grille personnalisée par place' : 'Formule standard : 10 × √(entrées / place)'}>
+            <PointsGridField value={c.pointsGrid} onChange={(g) => patch({ pointsGrid: g }, 'Barème mis à jour (imports futurs)')} />
           </Section>
           <Section title="Historique des imports">
             {v.imports.length === 0 ? (
@@ -546,5 +552,25 @@ function MergeModal({ champId, players, onClose }: { champId: string; players: {
         </div>
       </div>
     </Modal>
+  );
+}
+
+/** Grille de points par place (championnats SnG). Vide = formule standard. */
+function PointsGridField({ value, onChange }: { value: number[]; onChange: (v: number[]) => void }) {
+  const [draft, setDraft] = useState(value.join(' / '));
+  const commit = () => {
+    const nums = draft
+      .split(/[\s/;,]+/)
+      .map((x) => Number(x.replace(',', '.')))
+      .filter((n) => Number.isFinite(n) && n >= 0);
+    onChange(nums);
+    setDraft(nums.join(' / '));
+  };
+  return (
+    <div>
+      <label className="label">Points par place (1er / 2e / 3e…)</label>
+      <input className="input" value={draft} placeholder="Ex : 10 / 7 / 5 / 3 / 1 — vide = formule standard" onChange={(e) => setDraft(e.target.value)} onBlur={commit} />
+      <p className="mt-1 text-xs text-zinc-500">Places au-delà de la grille : 0 point. S'applique aux prochains tournois envoyés.</p>
+    </div>
   );
 }

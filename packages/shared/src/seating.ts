@@ -156,8 +156,8 @@ export function computeBalance(
     return m;
   };
   const seatsTaken = (t: number) => new Set(players.filter((p) => p.table === t).map((p) => p.seat!));
-  const moveTo = (p: SeatPlayer, t: number) => {
-    const free = freeSeats(seatsTaken(t), cfg.maxPerTable);
+  const moveTo = (p: SeatPlayer, t: number, cap = cfg.maxPerTable) => {
+    const free = freeSeats(seatsTaken(t), cap);
     if (free.length === 0) return false;
     p.table = t;
     p.seat = pick(free, rng);
@@ -167,14 +167,15 @@ export function computeBalance(
   let occ = occupied();
   const n = players.length;
 
-  if (occ.size > 1 && n <= cfg.finalTableSize && n <= cfg.maxPerTable) {
+  const finalCap = Math.max(cfg.maxPerTable, cfg.finalTableSize);
+  if (occ.size > 1 && n <= cfg.finalTableSize && n <= finalCap) {
     const flagged = tables.find((t) => t.isFinal && occ.has(t.number))?.number;
     // table finale : table marquée, sinon la plus remplie (moins de déplacements), puis numéro le plus bas
     const target =
       flagged ??
       [...occ.entries()].sort((a, b) => b[1].length - a[1].length || a[0] - b[0])[0][0];
     finalTable = target;
-    for (const p of shuffle(players.filter((p) => p.table !== target), rng)) moveTo(p, target);
+    for (const p of shuffle(players.filter((p) => p.table !== target), rng)) moveTo(p, target, finalCap);
     for (const t of occ.keys()) if (t !== target) removed.push(t);
   } else {
     // casse de tables
@@ -231,9 +232,14 @@ export function computeBalance(
 
 /** Aperçu textuel pour les réglages. */
 export function tablesPreview(maxPerTable: number, finalTableSize: number) {
-  const ft = Math.min(finalTableSize, maxPerTable);
+  const ft = Math.min(finalTableSize, maxPerTable + 1);
   // à ft+1 joueurs restants, sur 2 tables
   const a = Math.ceil((ft + 1) / 2);
   const b = ft + 1 - a;
   return { finalAt: ft, beforeFinal: { n: ft + 1, a, b } };
+}
+
+/** Nombre de sièges d'une table : la table finale peut compter un siège de plus. */
+export function tableCapacity(isFinal: boolean, s: { maxPerTable: number; finalTableSize: number }): number {
+  return isFinal ? Math.max(s.maxPerTable, Math.min(10, s.finalTableSize)) : s.maxPerTable;
 }

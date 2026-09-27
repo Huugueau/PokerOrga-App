@@ -10,6 +10,8 @@ export interface GeneratorInput {
   ante: boolean;
   breakEvery: number; // 0 = pas de pause
   breakMinutes?: number;
+  /** Jetons supplémentaires attendus via recaves / add-ons, en % du total de départ. */
+  extraChipsPct?: number;
 }
 
 export interface GeneratorSummary {
@@ -52,7 +54,7 @@ export function generateStructure(input: GeneratorInput): { levels: Level[]; sum
   const breakEvery = Math.max(0, Math.round(input.breakEvery));
   const perLevel = levelMin + (breakEvery > 0 ? breakMin / breakEvery : 0);
   const nLevels = Math.max(3, Math.floor((input.durationHours * 60) / perLevel));
-  const totalChips = players * stack;
+  const totalChips = players * stack * (1 + Math.max(0, input.extraChipsPct ?? 0) / 100);
   const endTarget = totalChips / 20;
   const values = ladder(chip, endTarget);
   const bb0 = nearest(values, Math.max(2 * chip, stack / 100), 0);

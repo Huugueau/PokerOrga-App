@@ -51,7 +51,7 @@ function checkSettings(next: TournamentSettings, prev: TournamentSettings, start
   if (s.bounty.type !== 'none' && s.bounty.amount > s.buyin) throw bad(`La prime ne peut pas dépasser le buy-in (${s.buyin} €).`);
   if (s.bounty.type === 'none') s.bounty.amount = s.bounty.amount || 0;
   if (!rakeAllowed) s.rake = 0;
-  if (s.finalTableSize > s.maxPerTable) s.finalTableSize = s.maxPerTable;
+  if (s.finalTableSize > Math.min(10, s.maxPerTable + 1)) s.finalTableSize = Math.min(10, s.maxPerTable + 1);
   return settingsSchema.parse(s);
 }
 

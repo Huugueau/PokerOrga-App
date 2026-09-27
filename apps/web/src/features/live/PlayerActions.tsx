@@ -1,4 +1,4 @@
-import { formatMoney, type Player, type SeatRef, type TournamentSnapshot } from '@pokerorga/shared';
+import { formatMoney, tableCapacity, type Player, type SeatRef, type TournamentSnapshot } from '@pokerorga/shared';
 import { Gift, Search, UserPlus } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { cx, Modal, useConfirm } from '../../components/ui';
@@ -257,7 +257,6 @@ export function MoveModal({ snap, onClose, initial }: { snap: TournamentSnapshot
   const run = useLiveAction(t.id);
   const [player, setPlayer] = useState<Player | null>(initial ?? null);
   const active = snap.players.filter((p) => p.status === 'active');
-  const max = t.settings.maxPerTable;
   const tableNumbers = snap.tables.map((tb) => tb.number);
   if (!player) {
     return (
@@ -277,7 +276,7 @@ export function MoveModal({ snap, onClose, initial }: { snap: TournamentSnapshot
           <div key={n} className="rounded-xl border border-white/10 bg-white/5 p-3">
             <p className="eyebrow mb-2">Table {n}</p>
             <div className="grid grid-cols-5 gap-1.5">
-              {Array.from({ length: max }, (_, i) => i + 1).map((s) => {
+              {Array.from({ length: tableCapacity(!!snap.tables.find((x) => x.number === n)?.isFinal, t.settings) }, (_, i) => i + 1).map((s) => {
                 const occ = active.find((p) => p.tableNumber === n && p.seatNumber === s);
                 const me = occ?.id === player.id;
                 return (

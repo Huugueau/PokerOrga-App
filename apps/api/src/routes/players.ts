@@ -7,6 +7,7 @@ import {
   placeNewPlayer,
   playerInputSchema,
   resolveClock,
+  tableCapacity,
   type Tournament,
 } from '@pokerorga/shared';
 import { z } from 'zod';
@@ -155,6 +156,9 @@ export async function playerRoutes(app: FastifyInstance) {
         if (!open) throw bad('Re-entry interdit : la late registration est terminée.');
         if (fmt === 'reentry' && t.settings.reentryLimit >= 0 && victim.entries - 1 >= t.settings.reentryLimit) {
           throw bad('Ce joueur a atteint sa limite de re-entry.');
+        }
+        if (fmt === 'rebuys' && t.settings.rebuyLimit >= 0 && victim.rebuys >= t.settings.rebuyLimit) {
+          throw bad('Ce joueur a atteint sa limite de recaves.');
         }
       }
       if (!body.again && activeBefore <= 1) throw bad('Le dernier joueur en lice est le vainqueur.');
@@ -309,6 +313,7 @@ export async function playerRoutes(app: FastifyInstance) {
       if (op === 'rebuy') {
         if (t.settings.entryFormat !== 'rebuys') throw bad("Les recaves ne sont pas activées sur ce tournoi.");
         if (!lateRegOpen(t, now)) throw bad('Recave interdite : la late registration est terminée.');
+        if (t.settings.rebuyLimit >= 0 && p.rebuys >= t.settings.rebuyLimit) throw bad('Ce joueur a atteint sa limite de recaves.');
         const set: Partial<PlayerRow> = { rebuys: p.rebuys + 1 };
         if (p.status === 'eliminated') Object.assign(set, { status: 'active', eliminatedAt: null, eliminatedBy: null });
         await tx.update(players).set(set).where(eq(players.id, pid));
@@ -341,8 +346,9 @@ export async function playerRoutes(app: FastifyInstance) {
       const { tx, t } = ctx;
       const p = await getPlayer(tx, id, pid);
       if (p.status !== 'active') throw bad('Ce joueur est éliminé.');
-      if (body.seat > t.settings.maxPerTable) throw bad('Siège invalide pour ce format de table.');
       const tables = await loadTables(tx, id);
+      const target = tables.find((tb) => tb.number === body.table);
+      if (body.seat > tableCapacity(!!target?.isFinal, t.settings)) throw bad('Siège invalide pour ce format de table.');
       if (!tables.some((tb) => tb.number === body.table)) await tx.insert(tournamentTables).values({ tournamentId: id, number: body.table });
       const [other] = await tx
         .select()

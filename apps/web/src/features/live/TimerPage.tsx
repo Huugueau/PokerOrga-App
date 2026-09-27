@@ -34,6 +34,7 @@ import { api, assetUrl } from '../../lib/api';
 import { SettingsOverlay, type SettingsTab } from '../settings/SettingsOverlay';
 import { AddPlayerModal, BustFlow, MoveModal, SimplePlayerAction, type ActionKind } from './PlayerActions';
 import { ResultsModal } from './ResultsModal';
+import { LiveFeed } from './LiveFeed';
 import { useDeviceSound, useTimerSounds } from './sounds';
 import { useClockView, useLive, useLiveAction, type ClockView } from './useLive';
 
@@ -206,6 +207,8 @@ export default function TimerPage() {
           onSound={() => setDevice({ enabled: !device.enabled })}
         />
       )}
+
+      <LiveFeed snap={snap} />
 
       {t.pendingMoves.length > 0 && (
         <BalanceBanner snap={snap} onDone={() => run(() => api.post(`/tournaments/${t.id}/seating/ack`))} readOnly={tv} />
@@ -382,7 +385,7 @@ function DesktopTimer({
         {/* stats */}
         <aside className="glass flex flex-row flex-wrap items-center justify-around gap-4 rounded-2xl p-4 lg:flex-col lg:justify-evenly">
           <Stat label="Joueurs" value={`${s.activePlayers} / ${s.totalEntries + (f === 'rebuys' ? 0 : 0)}`} />
-          <Stat label="Moyenne" value={formatChips(s.averageStack)} />
+          <Stat label="Moyenne" value={<>{formatChips(s.averageStack)}{cur?.kind === 'level' && cur.bb > 0 && s.averageStack > 0 && <span className="block text-[0.5em] font-semibold text-zinc-400">{Math.round(s.averageStack / cur.bb)} BB</span>}</>} />
           {!t.settings.isFree && !t.settings.hidePayout && <Stat label="Prizepool" value={formatMoney(s.prizePool)} />}
           {f === 'rebuys' && <Stat label="Recaves" value={s.totalRebuys} />}
           {t.settings.addonsEnabled && <Stat label="Add-ons" value={s.totalAddons} />}
@@ -512,6 +515,7 @@ function MobileTimer({
       <div className="glass rounded-2xl p-4 text-center">
         <p className="title-color text-6xl font-black tabular">{clock.finished ? 'FIN' : formatMs(clock.remainingMs)}</p>
         {!clock.running && <span className="text-xs font-black tracking-widest accent">PAUSE</span>}
+        <SeekBar tournamentId={t.id} clock={clock} className="mt-3" />
         <p className="mt-2 text-xl font-bold tabular">{cur?.kind === 'break' ? 'PAUSE' : `Niv. ${clock.levelNumber} · ${formatBlind(cur?.sb ?? 0)} / ${formatBlind(cur?.bb ?? 0)}${cur?.ante ? ` (${formatBlind(cur.ante)})` : ''}`}</p>
         <div className="mt-3 grid grid-cols-3 gap-2 text-xs text-zinc-300">
           <span>
@@ -591,5 +595,33 @@ function BalanceBanner({ snap, onDone, readOnly }: { snap: TournamentSnapshot; o
         </button>
       )}
     </div>
+  );
+}
+
+/** Barre d'avancement du niveau, déplaçable (desktop et mobile). */
+function SeekBar({ tournamentId, clock, className }: { tournamentId: string; clock: ClockView; className?: string }) {
+  const [seek, setSeek] = useState<number | null>(null);
+  const run = useLiveAction(tournamentId);
+  const pct = Math.round((seek ?? clock.progress) * 1000) / 10;
+  const commit = () => {
+    if (seek == null) return;
+    const remainingMs = Math.round(clock.total * (1 - seek));
+    setSeek(null);
+    void run(() => api.post(`/tournaments/${tournamentId}/clock`, { action: 'seek', remainingMs }));
+  };
+  return (
+    <input
+      type="range"
+      className={cx('progress w-full', className)}
+      aria-label="Progression du niveau en cours"
+      min={0}
+      max={1000}
+      value={Math.round((seek ?? clock.progress) * 1000)}
+      style={{ ['--pct' as string]: `${pct}%` }}
+      onChange={(e) => setSeek(Number(e.target.value) / 1000)}
+      onPointerUp={commit}
+      onKeyUp={commit}
+      onTouchEnd={commit}
+    />
   );
 }

@@ -12,6 +12,7 @@ export const bountySchema = z.object({
 export const settingsSchema = z.object({
   entryFormat: z.enum(['freezeout', 'reentry', 'rebuys']),
   reentryLimit: z.number().int().min(-1).max(100),
+  rebuyLimit: z.number().int().min(-1).max(100).default(-1),
   addonsEnabled: z.boolean(),
   addonCost: money,
   addonStack: z.number().int().min(0).max(100_000_000),

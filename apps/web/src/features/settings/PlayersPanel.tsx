@@ -1,4 +1,4 @@
-import { parsePlayersFile, PLAYER_CSV_TEMPLATE, type Player, type PlayerRow, type TournamentSnapshot } from '@pokerorga/shared';
+import { parsePlayersFile, PLAYER_CSV_TEMPLATE, tableCapacity, type Player, type PlayerRow, type TournamentSnapshot } from '@pokerorga/shared';
 import {
   ArrowLeftRight,
   Dices,
@@ -297,7 +297,6 @@ function TablesView({ snap, onMove }: { snap: TournamentSnapshot; onMove: (p: Pl
   const t = snap.tournament;
   const run = useLiveAction(t.id);
   const confirm = useConfirm();
-  const max = t.settings.maxPerTable;
   if (snap.tables.length === 0) {
     return (
       <Empty icon={<Dices size={32} />} title="Aucune table">
@@ -309,6 +308,7 @@ function TablesView({ snap, onMove }: { snap: TournamentSnapshot; onMove: (p: Pl
     <div className="grid gap-4 md:grid-cols-2">
       {snap.tables.map((tb) => {
         const players = snap.players.filter((p) => p.status === 'active' && p.tableNumber === tb.number);
+        const max = tableCapacity(tb.isFinal, t.settings);
         return (
           <div key={tb.id} className={cx('card p-4', tb.isFinal && 'border-accent-500/50')}>
             <div className="mb-3 flex items-center justify-between gap-2">

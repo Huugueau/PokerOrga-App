@@ -175,6 +175,8 @@ export const championships = pgTable('championships', {
   name: text('name').notNull(),
   type: text('type').$type<'mtt' | 'sng'>().notNull().default('mtt'),
   bestResults: integer('best_results'),
+  /** Championnat SnG : points par place (index 0 = 1er). Vide = formule standard. */
+  pointsGrid: jsonb('points_grid').$type<number[]>().notNull().default([]),
   archived: boolean('archived').notNull().default(false),
   published: boolean('published').notNull().default(false),
   publicToken: text('public_token').notNull().unique(),

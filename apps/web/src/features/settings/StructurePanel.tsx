@@ -314,6 +314,7 @@ function GeneratorModal({ snap, onClose, onApply }: { snap: TournamentSnapshot; 
     smallestChip: 25,
     ante: true,
     breakEvery: 4,
+    extraChipsPct: s.entryFormat === 'rebuys' ? 50 : s.entryFormat === 'reentry' ? 25 : 0,
   });
   const res = useMemo(() => generateStructure(input), [input]);
   const set = (p: Partial<GeneratorInput>) => setInput({ ...input, ...p });
@@ -359,6 +360,9 @@ function GeneratorModal({ snap, onClose, onApply }: { snap: TournamentSnapshot; 
           </Field>
           <Field label="Pauses tous les (niveaux)">
             <NumberField value={input.breakEvery} min={0} max={20} onCommit={(v) => set({ breakEvery: v ?? 0 })} />
+          </Field>
+          <Field label="Jetons en plus (recaves / add-ons)">
+            <NumberField value={input.extraChipsPct ?? 0} min={0} max={300} suffix="%" onCommit={(v) => set({ extraChipsPct: v ?? 0 })} />
           </Field>
           <Toggle checked={input.ante} onChange={(v) => set({ ante: v })} label="Ante (Big Blind Ante)" />
         </div>

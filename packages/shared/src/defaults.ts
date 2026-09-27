@@ -11,6 +11,7 @@ export function uid(): string {
 export const DEFAULT_SETTINGS: TournamentSettings = {
   entryFormat: 'freezeout',
   reentryLimit: -1,
+  rebuyLimit: -1,
   addonsEnabled: false,
   addonCost: 10,
   addonStack: 10000,

@@ -369,6 +369,7 @@ export function EventDetailPage() {
                 <div key={r.id} className="flex flex-wrap items-center gap-3 py-2.5">
                   <div className="min-w-40 flex-1">
                     <p className="font-semibold">
+                      {r.status === 'waitlist' && <span className="mr-2 chip">#{regs.filter((x) => x.status === 'waitlist').findIndex((x) => x.id === r.id) + 1}</span>}
                       {r.pseudo} {r.present && <span className="chip ml-1 border-emerald-400/40 text-emerald-300">✓ Présent</span>}
                     </p>
                     <p className="text-xs text-zinc-500">

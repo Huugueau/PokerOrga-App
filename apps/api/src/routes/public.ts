@@ -40,6 +40,7 @@ export async function publicRoutes(app: FastifyInstance) {
       title: t.title,
       logoAssetId: t.theme.logoAssetId,
       maxPerTable: t.settings.maxPerTable,
+      finalTableSize: t.settings.finalTableSize,
       version: t.version,
       stats: { activePlayers: stats.activePlayers, totalEntries: stats.totalEntries },
       tables: tables.map((tb) => ({
@@ -119,6 +120,11 @@ export async function publicRoutes(app: FastifyInstance) {
       .insert(registrations)
       .values({ eventId: e.id, ...body, email: body.email || null, status: full ? 'waitlist' : 'pending' })
       .returning({ status: registrations.status });
-    return { ok: true, status: r.status };
+    let position: number | null = null;
+    if (r.status === 'waitlist') {
+      const wl = await db.select({ id: registrations.id }).from(registrations).where(and(eq(registrations.eventId, e.id), eq(registrations.status, 'waitlist')));
+      position = wl.length;
+    }
+    return { ok: true, status: r.status, position };
   });
 }

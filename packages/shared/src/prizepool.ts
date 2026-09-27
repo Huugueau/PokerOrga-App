@@ -14,7 +14,8 @@ export function computeStats(s: TournamentSettings, players: Pick<Player, 'statu
   const bShare = bountyShare(s);
   const prizePool = s.isFree
     ? 0
-    : Math.max(0, totalEntries * (s.buyin - bShare - s.rake) + totalRebuys * (rebuyCost - s.rake) + totalAddons * s.addonCost);
+    : Math.max(0, totalEntries * (s.buyin - bShare) + totalRebuys * rebuyCost + totalAddons * s.addonCost);
+  const rakeTotal = (totalEntries + totalRebuys) * Math.max(0, s.rake);
   const bountyPool = totalEntries * bShare;
   const chipsInPlay = totalEntries * s.startStack + totalRebuys * rebuyStack + totalAddons * s.addonStack;
   const tables = new Set(players.filter((p) => p.status === 'active' && p.tableNumber != null).map((p) => p.tableNumber)).size;
@@ -26,6 +27,7 @@ export function computeStats(s: TournamentSettings, players: Pick<Player, 'statu
     registered: players.length,
     prizePool: round2(prizePool),
     bountyPool: round2(bountyPool),
+    rakeTotal: round2(rakeTotal),
     chipsInPlay,
     averageStack: activePlayers > 0 ? Math.round(chipsInPlay / activePlayers) : 0,
     tables,
