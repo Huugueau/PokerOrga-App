@@ -550,3 +550,39 @@ Toutes les phases 0 à 12 sont implémentées.
 
 ### Pistes V2
 Multi Sit-and-Go, tournois flights, module « Mon club », scan QR des joueurs, connexion Google, emails transactionnels, tests E2E Playwright.
+
+---
+
+## 13. Itération 2 — analyse des pages fonctionnelles du site de référence (27/09/2026)
+
+Pages analysées : formats, contrôle mobile, génération de structure, gestion financière, Mon planning, championnats, affichage TV, personnalisation, clubs, Mon club.
+
+| Page | Écart constaté | Réalisation |
+|---|---|---|
+| Formats | Limite de recaves (« double chance »), table finale à un siège de plus, badges Invité / Adhérent sur le plan | `rebuyLimit`, `tableCapacity()` (table finale jusqu'à `maxPerTable + 1`), badges |
+| Contrôle mobile | Barre d'avancement du niveau sur mobile, scan QR des joueurs | Barre sur mobile, bouton **Scan QR** (caméra via jsQR ou saisie du code) |
+| Structure | Générateur tenant compte des recaves / add-ons ; générateur public | Paramètre « jetons en plus (%) », page publique `/outils/structure` + export CSV |
+| Gestion financière | Rake **en sus** du buy-in, hors prize pool (entrées + recaves, pas les add-ons) ; calculateur de payout | `stats.rakeTotal`, prize pool sans rake ; page publique `/outils/payout` |
+| Mon planning | Position en liste d'attente, QR de pointage, suivi / annulation par le joueur | Position (organisateur + joueur), code `R…` par préinscription, page `/p/inscription/:code` |
+| Championnats | 8 jokers par défaut, barème SnG personnalisable | `pointsGrid` (grille par place), défaut 8 meilleurs résultats |
+| Affichage TV | Notifications dynamiques (éliminations, tables cassées), tapis moyen lisible | Fil d'actu `LiveFeed` sur tous les écrans, moyenne en BB |
+| Personnalisation | — (déjà couvert) | Palette par défaut revue (voir ci-dessous) |
+| Clubs | Sessions **Multi Sit-and-Go** | `settings.multiSng` : chaque table = un SnG, classement par SnG, pause auto, un import championnat par SnG |
+| Mon club | Module complet absent | Voir §13.2 |
+
+### 13.1 Charte graphique
+Palette sobre et neutre, sans reprendre l'app de référence : tons **graphite** (`ink-950 #0b0d10` → `ink-500 #434c59`), textes `zinc`, un seul accent **vert-de-gris** (`accent-500 #4ea486`) utilisé avec parcimonie (actions principales, états actifs, liseré du timer). Thème par défaut du timer aligné (`primary #1a1f26`, `secondary #4ea486`).
+
+### 13.2 Module « Mon club »
+Tables : `clubs` (1 par organisateur, rôles en JSON, page publique), `club_seasons` (une seule ouverte), `club_members` (pseudo unique par club, code QR `M…`), `club_memberships` (adhésion par saison, montant attendu, exonération), `club_payments` (cotisations / dons, annulables — suivi indicatif), `club_requests` (demandes depuis la page publique). `players.member_id` relie un joueur de live à un adhérent.
+
+API `/api/club/*` : fiche, saisons, adhérents, adhésions, renouvellement groupé, paiements, demandes (accepter / refuser), export CSV, inscription d'adhérents dans un live. Public : `GET /api/public/club/:token`, `POST /api/public/club/:token/request`. Pointage : `POST /api/tournaments/:id/checkin {code, add?, override?}` (codes `M…` et `R…`, URL complète acceptée).
+
+Front : `/club` (adhérents, demandes, paramètres), `/club/cards` (planche de cartes 85,6 × 54 mm avec QR), `/p/club/:token` (vitrine + demande d'adhésion).
+
+### 13.3 Vérifications
+Tests unitaires 17/17 ; test de bout en bout de l'API **29/29** (dont club, pointage QR, Multi SnG, barème SnG) ; `tsc` sans erreur ; parcours visuels : palette, Mon club, fiche adhérent + QR, sessions SnG, outils publics.
+
+### 13.4 Reste à faire
+- **Tournois flights** (Day 1A / 1B → Day 2, tapis bagués) et **horloge liée** entre deux lives.
+- Compte joueur (identité persistante multi-événements) : remplacé ici par le lien personnel de préinscription et la carte membre.
