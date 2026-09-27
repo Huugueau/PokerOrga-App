@@ -10,14 +10,14 @@ import {
   toCsv,
   type GeneratorInput,
 } from '@pokerorga/shared';
-import { Calculator, CalendarDays, Download, Layers, MapPin } from 'lucide-react';
+import { Calculator, CalendarDays, Download, Layers, MapPin, Spade } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { QrCode } from '../components/QrCode';
 import { cx, Empty, fmtDate, Loading, NumberField, Toggle, useConfirm, useToast } from '../components/ui';
 import { api, ApiError, downloadText } from '../lib/api';
 
-function ToolsFrame({ children, tab }: { children: React.ReactNode; tab: 'structure' | 'payout' }) {
+export function ToolsFrame({ children, tab }: { children: React.ReactNode; tab: 'structure' | 'payout' | 'solver' }) {
   return (
     <div className="bg-felt min-h-screen">
       <div className="mx-auto max-w-5xl px-4 py-8">
@@ -34,6 +34,9 @@ function ToolsFrame({ children, tab }: { children: React.ReactNode; tab: 'struct
             </Link>
             <Link to="/outils/payout" className={cx('rounded-full px-4 py-1.5 text-sm font-semibold', tab === 'payout' ? 'bg-accent-500 text-ink-950' : 'bg-white/5 text-zinc-300')}>
               <Calculator size={14} className="mr-1 inline" /> Calculateur de payout
+            </Link>
+            <Link to="/outils/solveur" className={cx('rounded-full px-4 py-1.5 text-sm font-semibold', tab === 'solver' ? 'bg-accent-500 text-ink-950' : 'bg-white/5 text-zinc-300')}>
+              <Spade size={14} className="mr-1 inline" /> Qui gagne ?
             </Link>
           </div>
         </div>

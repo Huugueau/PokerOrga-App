@@ -20,6 +20,8 @@ import { baseBounty, ensureMysteryFrozen, loadPlayers, loadTables, mutateTournam
 const { players, tournamentTables, playerActions } = schema;
 const pParams = idParam.extend({ pid: z.string().uuid() });
 
+const rebuyStack = (s: Tournament['settings']) => s.rebuyStack ?? s.startStack;
+
 function lateRegOpen(t: Tournament, now: number) {
   return clockInfo(t.structure, resolveClock(t.clock, t.structure, now)).lateRegOpen;
 }
@@ -256,11 +258,14 @@ export async function playerRoutes(app: FastifyInstance) {
       if (body.again && fmt === 'reentry') {
         await tx
           .update(players)
-          .set({ entries: victim.entries + 1, bountyValue: baseBounty(t.settings), tableNumber: null, seatNumber: null })
+          .set({ entries: victim.entries + 1, bountyValue: baseBounty(t.settings), tableNumber: null, seatNumber: null, chips: null })
           .where(eq(players.id, pid));
         newSeat = await seatPlayer(ctx, pid);
       } else if (body.again && fmt === 'rebuys') {
-        await tx.update(players).set({ rebuys: victim.rebuys + 1 }).where(eq(players.id, pid));
+        await tx
+          .update(players)
+          .set({ rebuys: victim.rebuys + 1, chips: victim.chips == null ? null : rebuyStack(t.settings) })
+          .where(eq(players.id, pid));
       } else {
         await tx
           .update(players)
@@ -332,7 +337,7 @@ export async function playerRoutes(app: FastifyInstance) {
       if (t.settings.reentryLimit >= 0 && p.entries - 1 >= t.settings.reentryLimit) throw bad('Ce joueur a atteint sa limite de re-entry.');
       await tx
         .update(players)
-        .set({ status: 'active', entries: p.entries + 1, eliminatedAt: null, eliminatedBy: null, finishRank: null, bountyValue: baseBounty(t.settings) })
+        .set({ status: 'active', entries: p.entries + 1, eliminatedAt: null, eliminatedBy: null, finishRank: null, bountyValue: baseBounty(t.settings), chips: null })
         .where(eq(players.id, pid));
       await logAction(ctx, pid, 'reentry');
       const seat = await seatPlayer(ctx, pid);
@@ -355,6 +360,7 @@ export async function playerRoutes(app: FastifyInstance) {
         if (!lateRegOpen(t, now)) throw bad('Recave interdite : la late registration est terminée.');
         if (t.settings.rebuyLimit >= 0 && p.rebuys >= t.settings.rebuyLimit) throw bad('Ce joueur a atteint sa limite de recaves.');
         const set: Partial<PlayerRow> = { rebuys: p.rebuys + 1 };
+        if (p.chips != null) set.chips = (p.status === 'eliminated' ? 0 : p.chips) + rebuyStack(t.settings);
         if (p.status === 'eliminated') Object.assign(set, { status: 'active', eliminatedAt: null, eliminatedBy: null });
         await tx.update(players).set(set).where(eq(players.id, pid));
         if (p.status === 'eliminated') {
@@ -366,14 +372,23 @@ export async function playerRoutes(app: FastifyInstance) {
         if (!t.settings.addonsEnabled) throw bad("Les add-ons ne sont pas activés.");
         if (p.status !== 'active') throw bad('Ce joueur est éliminé.');
         if (p.addons >= 1) throw bad('Ce joueur a déjà pris un add-on.');
-        await tx.update(players).set({ addons: p.addons + 1 }).where(eq(players.id, pid));
+        await tx
+          .update(players)
+          .set({ addons: p.addons + 1, chips: p.chips == null ? null : p.chips + t.settings.addonStack })
+          .where(eq(players.id, pid));
         await logAction(ctx, pid, 'addon');
       } else if (op === 'undo-rebuy') {
         if (p.rebuys <= 0) throw bad('Aucune recave à annuler.');
-        await tx.update(players).set({ rebuys: p.rebuys - 1 }).where(eq(players.id, pid));
+        await tx
+          .update(players)
+          .set({ rebuys: p.rebuys - 1, chips: p.chips == null ? null : Math.max(0, p.chips - rebuyStack(t.settings)) })
+          .where(eq(players.id, pid));
       } else if (op === 'undo-addon') {
         if (p.addons <= 0) throw bad('Aucun add-on à annuler.');
-        await tx.update(players).set({ addons: p.addons - 1 }).where(eq(players.id, pid));
+        await tx
+          .update(players)
+          .set({ addons: p.addons - 1, chips: p.chips == null ? null : Math.max(0, p.chips - t.settings.addonStack) })
+          .where(eq(players.id, pid));
       }
     });
     return { ok: true };

@@ -4,8 +4,40 @@
     {
       "name": "web",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "-w", "@pokerorga/web"],
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "-w",
+        "@pokerorga/web"
+      ],
       "port": 5173
+    },
+    {
+      "name": "api-alt",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "tsx",
+        "apps/api/src/server.ts"
+      ],
+      "env": {
+        "PORT": "3001"
+      },
+      "port": 3001
+    },
+    {
+      "name": "web-alt",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "-w",
+        "@pokerorga/web"
+      ],
+      "env": {
+        "WEB_PORT": "5174",
+        "API_PORT": "3001"
+      },
+      "port": 5174
     }
   ]
 }

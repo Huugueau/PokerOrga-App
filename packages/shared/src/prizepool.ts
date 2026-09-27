@@ -51,3 +51,9 @@ export function formatBlind(n: number): string {
   if (n >= 10000 && n % 1000 === 0) return `${n / 1000}k`;
   return new Intl.NumberFormat('fr-FR').format(n);
 }
+
+/** Tapis courant d'un joueur : compté par la tablette croupier, sinon estimé depuis ses entrées. */
+export function playerChips(p: Pick<Player, 'chips' | 'startChips' | 'rebuys' | 'addons'>, s: TournamentSettings): number {
+  if (p.chips != null) return p.chips;
+  return (p.startChips ?? s.startStack) + p.rebuys * (s.rebuyStack ?? s.startStack) + p.addons * s.addonStack;
+}

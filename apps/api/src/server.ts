@@ -15,6 +15,7 @@ import { championshipRoutes } from './routes/championships';
 import { checkinRoutes } from './routes/checkin';
 import { clubRoutes } from './routes/club';
 import { flightRoutes } from './routes/flights';
+import { handRoutes } from './routes/hands';
 import { playerAccountRoutes } from './routes/playerAccount';
 import { directoryRoutes } from './routes/directory';
 import { eventRoutes } from './routes/events';
@@ -80,6 +81,7 @@ export async function buildApp() {
       await api.register(flightRoutes);
       await api.register(playerAccountRoutes);
       await api.register(directoryRoutes);
+      await api.register(handRoutes);
     },
     { prefix: '/api' },
   );

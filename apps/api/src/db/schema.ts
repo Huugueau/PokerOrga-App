@@ -15,6 +15,9 @@ import {
 } from 'drizzle-orm/pg-core';
 import type {
   ClockState,
+  HandAction,
+  HandConfig,
+  HandResult,
   Level,
   Move,
   MysteryState,
@@ -117,6 +120,8 @@ export const players = pgTable(
     sngGroup: integer('sng_group'),
     /** Tapis de départ spécifique (joueur qualifié d'un jour précédent). */
     startChips: integer('start_chips'),
+    /** Tapis réel (tablette croupier) ; null = estimé depuis les entrées. */
+    chips: integer('chips'),
     playerAccountId: uuid('player_account_id'),
     createdAt: ts('created_at').notNull().defaultNow(),
   },
@@ -140,6 +145,29 @@ export const playerActions = pgTable(
     undoneAt: ts('undone_at'),
   },
   (t) => [index('actions_tournament_idx').on(t.tournamentId, t.playerId)],
+);
+
+/** Mains saisies à la tablette croupier (config + actions : la main est rejouée à la demande). */
+export const hands = pgTable(
+  'hands',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tournamentId: uuid('tournament_id')
+      .notNull()
+      .references(() => tournaments.id, { onDelete: 'cascade' }),
+    tableNumber: integer('table_number').notNull(),
+    handNumber: integer('hand_number').notNull(),
+    status: text('status').$type<'running' | 'finished' | 'cancelled'>().notNull().default('running'),
+    config: jsonb('config').$type<HandConfig>().notNull(),
+    actions: jsonb('actions').$type<HandAction[]>().notNull().default([]),
+    result: jsonb('result').$type<HandResult | null>(),
+    /** Variation de tapis appliquée aux joueurs à la clôture (pour l'annulation). */
+    deltas: jsonb('deltas').$type<Record<string, number> | null>(),
+    levelIndex: integer('level_index').notNull().default(0),
+    startedAt: ts('started_at').notNull().defaultNow(),
+    finishedAt: ts('finished_at'),
+  },
+  (t) => [index('hands_table_idx').on(t.tournamentId, t.tableNumber, t.handNumber)],
 );
 
 export const favoriteStructures = pgTable('favorite_structures', {

@@ -19,6 +19,7 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AppShell } from './components/AppShell';
 import { ConfirmProvider, ToastProvider } from './components/ui';
+import DealerPage from './features/dealer/DealerPage';
 import TimerPage from './features/live/TimerPage';
 import { RequireAuth } from './lib/auth';
 import { AccountPage } from './pages/AccountPage';
@@ -31,6 +32,7 @@ import { PlayerAuthPage, PlayerSpacePage } from './pages/PlayerPages';
 import { HistoryDetailPage, HistoryPage } from './pages/HistoryPages';
 import { CurrentLiveRedirect, LivesPage } from './pages/LivesPage';
 import { EventDetailPage, PlanningPage } from './pages/PlanningPages';
+import { SolverPage } from './pages/SolverPage';
 import { MyRegistrationPage, PayoutToolPage, StructureToolPage } from './pages/ToolsPages';
 import { PublicClubPage, PublicPlanPage, PublicRankingPage, PublicRegisterPage } from './pages/PublicPages';
 
@@ -64,8 +66,11 @@ createRoot(document.getElementById('root')!).render(
               <Route path="/outils" element={<Navigate to="/outils/structure" replace />} />
               <Route path="/outils/structure" element={<StructureToolPage />} />
               <Route path="/outils/payout" element={<PayoutToolPage />} />
+              <Route path="/outils/solveur" element={<SolverPage />} />
               <Route path="/" element={<RequireAuth><CurrentLiveRedirect /></RequireAuth>} />
               <Route path="/live/:id" element={<RequireAuth><TimerPage /></RequireAuth>} />
+              <Route path="/croupier/:id" element={<RequireAuth><DealerPage /></RequireAuth>} />
+              <Route path="/croupier/:id/:table" element={<RequireAuth><DealerPage /></RequireAuth>} />
               <Route path="/lives" element={shell(<LivesPage />)} />
               <Route path="/planning" element={shell(<PlanningPage />)} />
               <Route path="/planning/:id" element={shell(<EventDetailPage />)} />

@@ -57,6 +57,13 @@
       "when": 1790537183004,
       "tag": "0007_directory",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790539590353,
+      "tag": "0008_hands",
+      "breakpoints": true
     }
   ]
 }

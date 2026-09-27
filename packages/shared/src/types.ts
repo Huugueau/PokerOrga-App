@@ -146,6 +146,8 @@ export interface Player {
   memberId: string | null;
   sngGroup: number | null;
   startChips: number | null;
+  /** Tapis réel suivi par la tablette croupier (null = jamais compté). */
+  chips: number | null;
   createdAt: string;
 }
 

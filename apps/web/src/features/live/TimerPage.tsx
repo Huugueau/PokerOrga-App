@@ -21,6 +21,7 @@ import {
   Settings,
   SkipBack,
   SkipForward,
+  Spade,
   Trophy,
   UserMinus,
   UserPlus,
@@ -29,7 +30,7 @@ import {
   WifiOff,
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { cx, Loading, useConfirm } from '../../components/ui';
 import { api, assetUrl } from '../../lib/api';
 import { SettingsOverlay, type SettingsTab } from '../settings/SettingsOverlay';
@@ -371,6 +372,9 @@ function DesktopTimer({
               <button className="btn-ghost btn-sm" onClick={onSound} title={soundOn ? 'Couper les sons' : 'Activer les sons'}>
                 {soundOn ? <Volume2 size={16} /> : <VolumeX size={16} />}
               </button>
+              <Link className="btn-ghost btn-sm" to={`/croupier/${t.id}`} title="Tablette croupier : saisie des mains, side pots, gagnants">
+                <Spade size={16} /> CROUPIER
+              </Link>
               <button className="btn-ghost btn-sm" onClick={onSettings}>
                 <Settings size={16} /> RÉGLAGES
               </button>
@@ -514,9 +518,14 @@ function MobileTimer({
     <div className="flex min-h-screen flex-col gap-3 p-3 pb-6">
       <div className="flex items-center justify-between">
         <Logo theme={t.theme} className="h-9 max-w-[140px]" />
-        <button className="btn-ghost btn-sm" onClick={onSettings}>
-          <Settings size={16} /> Réglages
-        </button>
+        <div className="flex gap-2">
+          <Link className="btn-ghost btn-sm" to={`/croupier/${t.id}`}>
+            <Spade size={16} /> Croupier
+          </Link>
+          <button className="btn-ghost btn-sm" onClick={onSettings}>
+            <Settings size={16} /> Réglages
+          </button>
+        </div>
       </div>
       <h1 className="title-color text-center text-2xl font-black uppercase">{t.title}</h1>
       <div className="glass rounded-2xl p-4 text-center">
