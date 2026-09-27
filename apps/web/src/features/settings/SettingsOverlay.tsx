@@ -123,6 +123,21 @@ export function SettingsOverlay({
           <p className="eyebrow">Tournoi de cet écran</p>
           <p className="mt-1 truncate font-bold">{t.title}</p>
           <p className="text-xs text-zinc-400">{statusLabel}</p>
+          {snap.linked.length > 0 && (
+            <div className="mt-2 rounded-lg bg-accent-500/10 px-2.5 py-2 text-xs">
+              <p className="font-semibold text-accent-300">Horloge liée</p>
+              <p className="text-zinc-300">avec {snap.linked.map((l) => l.title).join(', ')}</p>
+              <button
+                className="mt-1 text-zinc-400 underline hover:text-white"
+                onClick={async () => {
+                  const ok = await confirm({ title: 'Séparer ce tournoi ?', lines: ['Il garde le niveau et le temps actuels', 'Son timer devient indépendant'], confirmLabel: 'Séparer' });
+                  if (ok) await run(() => api.post(`/tournaments/${t.id}/unlink`), 'Horloge séparée.');
+                }}
+              >
+                Séparer l'horloge
+              </button>
+            </div>
+          )}
           <div className="mt-3 flex flex-wrap gap-1.5">
             <button className="btn-ghost btn-sm" onClick={onShowResults} title="Classement">
               <ListOrdered size={14} />

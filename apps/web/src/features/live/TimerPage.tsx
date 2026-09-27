@@ -345,6 +345,7 @@ function DesktopTimer({
         </div>
         <div className="flex flex-col items-center">
           <h1 className="title-color text-center text-[clamp(1.4rem,3vw,3rem)] font-black uppercase leading-tight tracking-wide">{t.title}</h1>
+          {controls && snap.linked.length > 0 && <p className="text-xs font-semibold text-zinc-400">Horloge liée avec {snap.linked.map((l) => l.title).join(', ')}</p>}
           {controls && (
             <div className="mt-1 flex items-center gap-2" aria-label="Contrôles du timer">
               <button className="rounded-full p-2 text-zinc-300 hover:bg-white/10 disabled:opacity-30" onClick={() => onClock('prev')} disabled={clock.levelIndex === 0} aria-label="Niveau précédent">

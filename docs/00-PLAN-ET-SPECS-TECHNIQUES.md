@@ -584,5 +584,8 @@ Front : `/club` (adhérents, demandes, paramètres), `/club/cards` (planche de c
 Tests unitaires 17/17 ; test de bout en bout de l'API **29/29** (dont club, pointage QR, Multi SnG, barème SnG) ; `tsc` sans erreur ; parcours visuels : palette, Mon club, fiche adhérent + QR, sessions SnG, outils publics.
 
 ### 13.4 Reste à faire
-- **Tournois flights** (Day 1A / 1B → Day 2, tapis bagués) et **horloge liée** entre deux lives.
+- **Tournois flights** (Day 1A / 1B → Day 2, tapis bagués).
 - Compte joueur (identité persistante multi-événements) : remplacé ici par le lien personnel de préinscription et la carte membre.
+
+### 13.5 Horloge liée (tournois simultanés)
+ regroupe des lives partageant timer et structure. Création via  (copie structure + horloge), séparation via  (le live garde son état). Toute mutation qui modifie  ou  est reportée dans la même transaction sur les autres lives du groupe, qui sont notifiés en SSE ; le premier « play » fait passer tous les lives liés en cours et exige 2 joueurs actifs dans chacun. Réinitialiser ou terminer un live le détache. Incompatible avec une session Multi Sit-and-Go. Interface : bouton « Tournoi simultané (horloge liée) » dans Mes lives, mention sous le titre du timer, bloc « Horloge liée / Séparer » dans les Réglages. Test de bout en bout : 34/34.
