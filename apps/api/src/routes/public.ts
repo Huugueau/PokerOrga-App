@@ -1,0 +1,124 @@
+import { and, asc, eq, ne } from 'drizzle-orm';
+import type { FastifyInstance } from 'fastify';
+import { computeStats } from '@pokerorga/shared';
+import { z } from 'zod';
+import { db, schema } from '../db';
+import { bad, notFound, parse } from '../lib';
+import { toPlayer, toTournament } from '../services/tournament';
+import { championshipView } from './championships';
+import { countTaken, pseudoInEvent, registrationInput } from './events';
+import { sse } from './tournaments';
+
+const { tournaments, players, tournamentTables, championships, events, registrations, assets, users } = schema;
+const tokenParam = z.object({ token: z.string().min(10).max(64) });
+
+async function tournamentByToken(token: string) {
+  const [row] = await db
+    .select()
+    .from(tournaments)
+    .where(and(eq(tournaments.publicToken, token), ne(tournaments.status, 'finished')));
+  if (!row) throw notFound('Ce lien n’est plus valable : le live a été terminé ou réinitialisé.');
+  return row;
+}
+
+export async function publicRoutes(app: FastifyInstance) {
+  app.get('/assets/:id', async (req, reply) => {
+    const { id } = parse(z.object({ id: z.string().uuid() }), req.params);
+    const [a] = await db.select().from(assets).where(eq(assets.id, id));
+    if (!a) throw notFound();
+    return reply.header('Content-Type', a.mime).header('Cache-Control', 'public, max-age=31536000, immutable').send(a.data);
+  });
+
+  app.get('/public/plan/:token', async (req) => {
+    const { token } = parse(tokenParam, req.params);
+    const row = await tournamentByToken(token);
+    const t = toTournament(row);
+    const plist = (await db.select().from(players).where(eq(players.tournamentId, row.id))).map(toPlayer);
+    const tables = await db.select().from(tournamentTables).where(eq(tournamentTables.tournamentId, row.id)).orderBy(asc(tournamentTables.number));
+    const stats = computeStats(t.settings, plist);
+    return {
+      title: t.title,
+      logoAssetId: t.theme.logoAssetId,
+      maxPerTable: t.settings.maxPerTable,
+      version: t.version,
+      stats: { activePlayers: stats.activePlayers, totalEntries: stats.totalEntries },
+      tables: tables.map((tb) => ({
+        number: tb.number,
+        isFinal: tb.isFinal,
+        seats: plist
+          .filter((p) => p.status === 'active' && p.tableNumber === tb.number)
+          .map((p) => ({ seat: p.seatNumber, pseudo: p.pseudo, locked: p.seatLocked }))
+          .sort((a, b) => (a.seat ?? 0) - (b.seat ?? 0)),
+      })),
+    };
+  });
+
+  app.get('/public/plan/:token/stream', async (req, reply) => {
+    const { token } = parse(tokenParam, req.params);
+    const row = await tournamentByToken(token);
+    return sse(req, reply, `t:${row.id}`);
+  });
+
+  app.get('/public/ranking/:token', async (req) => {
+    const { token } = parse(tokenParam, req.params);
+    const [c] = await db.select().from(championships).where(eq(championships.publicToken, token));
+    if (!c || !c.published) throw notFound('Ce championnat n’est pas publié, ou le lien n’est plus valide.');
+    const view = await championshipView(c);
+    const [owner] = await db.select({ clubName: users.clubName }).from(users).where(eq(users.id, c.ownerId));
+    return {
+      name: c.name,
+      type: c.type,
+      bestResults: c.bestResults,
+      organizer: owner?.clubName ?? null,
+      ranking: view.ranking,
+      imports: view.imports.filter((i) => !i.cancelledAt).length,
+      details: view.details,
+    };
+  });
+
+  app.get('/public/events/:token', async (req) => {
+    const { token } = parse(tokenParam, req.params);
+    const [e] = await db.select().from(events).where(eq(events.publicToken, token));
+    if (!e || e.status === 'draft') throw notFound('Page d’inscription introuvable.');
+    const [owner] = await db.select({ clubName: users.clubName, pseudo: users.pseudo }).from(users).where(eq(users.id, e.ownerId));
+    const regs = await db
+      .select({ pseudo: registrations.pseudo, status: registrations.status })
+      .from(registrations)
+      .where(eq(registrations.eventId, e.id))
+      .orderBy(asc(registrations.createdAt));
+    return {
+      name: e.name,
+      eventDate: e.eventDate,
+      eventTime: e.eventTime,
+      location: e.location,
+      capacity: e.capacity,
+      maxPerTable: e.maxPerTable,
+      startStack: e.startStack,
+      financialMode: e.financialMode,
+      buyin: e.buyin,
+      description: e.description,
+      options: e.options,
+      status: e.status,
+      organizer: owner?.clubName || owner?.pseudo || null,
+      taken: regs.filter((r) => r.status === 'pending' || r.status === 'validated').length,
+      participants: regs.filter((r) => r.status === 'validated').map((r) => r.pseudo),
+      waitlist: regs.filter((r) => r.status === 'waitlist').length,
+    };
+  });
+
+  app.post('/public/events/:token/register', async (req) => {
+    const { token } = parse(tokenParam, req.params);
+    const body = parse(registrationInput, req.body);
+    const [e] = await db.select().from(events).where(eq(events.publicToken, token));
+    if (!e || e.status === 'draft') throw notFound('Page d’inscription introuvable.');
+    if (e.status !== 'open') throw bad('Les inscriptions sont closes.');
+    for (const o of e.options) if (!body.answers[o.id]) throw bad('Le joueur doit répondre à toutes les options.');
+    if (await pseudoInEvent(e.id, body.pseudo)) throw bad('Ce pseudo est déjà inscrit à cet événement.');
+    const full = e.capacity != null && (await countTaken(e.id)) >= e.capacity;
+    const [r] = await db
+      .insert(registrations)
+      .values({ eventId: e.id, ...body, email: body.email || null, status: full ? 'waitlist' : 'pending' })
+      .returning({ status: registrations.status });
+    return { ok: true, status: r.status };
+  });
+}

@@ -1,0 +1,33 @@
+{
+  "name": "pokerorga",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -k -n api,web -c blue,magenta \"npm run dev -w @pokerorga/api\" \"npm run dev -w @pokerorga/web\"",
+    "dev:db": "node scripts/dev-db.mjs",
+    "build": "npm run build -w @pokerorga/web && npm run build -w @pokerorga/api",
+    "start": "npm run start -w @pokerorga/api",
+    "test": "npm run test -w @pokerorga/shared && npm run test -w @pokerorga/api",
+    "typecheck": "npm run typecheck -w @pokerorga/shared && npm run typecheck -w @pokerorga/api && npm run typecheck -w @pokerorga/web",
+    "db:generate": "npm run db:generate -w @pokerorga/api"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "embedded-postgres": "^18.4.0-beta.17",
+    "typescript": "~5.9.3"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "allowScripts": {
+    "esbuild@0.18.20": true,
+    "esbuild@0.25.12": true,
+    "esbuild@0.27.7": true,
+    "esbuild@0.28.2": true,
+    "@embedded-postgres/windows-x64@18.4.0-beta.17": true
+  }
+}

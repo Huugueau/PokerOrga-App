@@ -1,0 +1,15 @@
+# Base PostgreSQL seule pour le développement local (npm run dev)
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: pokerorga
+      POSTGRES_PASSWORD: pokerorga
+      POSTGRES_DB: pokerorga
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata-dev:/var/lib/postgresql/data
+
+volumes:
+  pgdata-dev:
