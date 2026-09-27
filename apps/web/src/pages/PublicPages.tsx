@@ -283,6 +283,10 @@ export function PublicRegisterPage() {
                   </div>
                   <p className="font-mono text-xs text-zinc-400">{code}</p>
                   <p className="max-w-sm text-sm text-zinc-300">Faites une capture de ce QR : présentez-le à l'accueil le jour J pour confirmer votre présence.</p>
+                  <a className="btn-ghost btn-sm" href={`/p/inscription/${code}`}>
+                    Suivre ou annuler mon inscription
+                  </a>
+                  <p className="text-xs text-zinc-500">Conservez ce lien : il est personnel.</p>
                 </div>
               )}
             </div>

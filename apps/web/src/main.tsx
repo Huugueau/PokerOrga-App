@@ -28,6 +28,7 @@ import { ClubCardsPage, ClubPage } from './pages/ClubPages';
 import { HistoryDetailPage, HistoryPage } from './pages/HistoryPages';
 import { CurrentLiveRedirect, LivesPage } from './pages/LivesPage';
 import { EventDetailPage, PlanningPage } from './pages/PlanningPages';
+import { MyRegistrationPage, PayoutToolPage, StructureToolPage } from './pages/ToolsPages';
 import { PublicClubPage, PublicPlanPage, PublicRankingPage, PublicRegisterPage } from './pages/PublicPages';
 
 const qc = new QueryClient({
@@ -53,6 +54,10 @@ createRoot(document.getElementById('root')!).render(
               <Route path="/p/ranking/:token" element={<PublicRankingPage />} />
               <Route path="/p/register/:token" element={<PublicRegisterPage />} />
               <Route path="/p/club/:token" element={<PublicClubPage />} />
+              <Route path="/p/inscription/:code" element={<MyRegistrationPage />} />
+              <Route path="/outils" element={<Navigate to="/outils/structure" replace />} />
+              <Route path="/outils/structure" element={<StructureToolPage />} />
+              <Route path="/outils/payout" element={<PayoutToolPage />} />
               <Route path="/" element={<RequireAuth><CurrentLiveRedirect /></RequireAuth>} />
               <Route path="/live/:id" element={<RequireAuth><TimerPage /></RequireAuth>} />
               <Route path="/lives" element={shell(<LivesPage />)} />

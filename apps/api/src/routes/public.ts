@@ -182,4 +182,27 @@ export async function publicRoutes(app: FastifyInstance) {
     await db.insert(clubRequests).values({ clubId: c.id, seasonId: season?.id ?? null, ...body, firstName: body.firstName || null, lastName: body.lastName || null, phone: body.phone || null, message: body.message || null });
     return { ok: true };
   });
+
+  // ---- Suivi d'une préinscription par le joueur (code du QR) ----
+  const codeParam = z.object({ code: z.string().regex(/^R[A-Za-z0-9]{6,20}$/) });
+  app.get('/public/registrations/:code', async (req) => {
+    const { code } = parse(codeParam, req.params);
+    const [r] = await db.select({ r: registrations, e: events }).from(registrations).innerJoin(events, eq(events.id, registrations.eventId)).where(eq(registrations.code, code));
+    if (!r) throw notFound('Inscription introuvable.');
+    let position: number | null = null;
+    if (r.r.status === 'waitlist') {
+      const wl = await db.select({ id: registrations.id, createdAt: registrations.createdAt }).from(registrations).where(and(eq(registrations.eventId, r.e.id), eq(registrations.status, 'waitlist'))).orderBy(asc(registrations.createdAt));
+      position = wl.findIndex((x) => x.id === r.r.id) + 1;
+    }
+    return { pseudo: r.r.pseudo, status: r.r.status, present: r.r.present, position, code, event: { name: r.e.name, eventDate: r.e.eventDate, eventTime: r.e.eventTime, location: r.e.location, status: r.e.status, publicToken: r.e.publicToken } };
+  });
+
+  app.post('/public/registrations/:code/cancel', async (req) => {
+    const { code } = parse(codeParam, req.params);
+    const [r] = await db.select({ r: registrations, e: events }).from(registrations).innerJoin(events, eq(events.id, registrations.eventId)).where(eq(registrations.code, code));
+    if (!r) throw notFound('Inscription introuvable.');
+    if (r.e.status === 'imported') throw bad('Le tournoi a déjà commencé : contactez l’organisateur.');
+    await db.update(registrations).set({ status: 'cancelled', present: false }).where(eq(registrations.id, r.r.id));
+    return { ok: true };
+  });
 }
