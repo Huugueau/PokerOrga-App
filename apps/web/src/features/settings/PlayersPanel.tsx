@@ -27,6 +27,7 @@ export function PlayersPanel({ snap, lateRegOpen }: { snap: TournamentSnapshot; 
   const run = useLiveAction(t.id);
   const confirm = useConfirm();
   const [view, setView] = useState<'list' | 'tables'>('list');
+  const multi = t.settings.multiSng;
   const [q, setQ] = useState('');
   const [adding, setAdding] = useState(false);
   const [bust, setBust] = useState(false);
@@ -90,10 +91,15 @@ export function PlayersPanel({ snap, lateRegOpen }: { snap: TournamentSnapshot; 
           </button>
         </p>
         <div className="flex flex-wrap items-center gap-2">
-          <button className="btn-ghost btn-sm" onClick={draw} disabled={active.length === 0}>
+          {multi && (
+            <button className="btn-ghost btn-sm" onClick={() => run(() => api.post(`/tournaments/${t.id}/tables`), 'SnG ajouté.')}>
+              <Plus size={15} /> Ajouter un SnG
+            </button>
+          )}
+          {!multi && <button className="btn-ghost btn-sm" onClick={draw} disabled={active.length === 0}>
             <Dices size={15} /> {seated ? 'Retirer les sièges (redraw)' : 'Tirage des sièges'}
-          </button>
-          {seated && (
+          </button>}
+          {seated && !multi && (
             <>
               <button className="btn-ghost btn-sm" onClick={() => run(async () => {
                 const r = await api.post<{ moves: unknown[] }>(`/tournaments/${t.id}/seating/balance`);
@@ -113,7 +119,7 @@ export function PlayersPanel({ snap, lateRegOpen }: { snap: TournamentSnapshot; 
           <button className="btn-danger btn-sm" onClick={() => setBust(true)} disabled={active.length === 0}>
             <UserMinus size={15} /> Sortant
           </button>
-          <div className="ml-auto">
+          <div className={cx('ml-auto', multi && 'hidden')}>
             <Segmented
               size="sm"
               value={view}
@@ -128,7 +134,9 @@ export function PlayersPanel({ snap, lateRegOpen }: { snap: TournamentSnapshot; 
         {seated && unseated > 0 && <p className="mt-3 rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-200">{unseated} joueur(s) actif(s) sans siège : relancez le tirage ou déplacez-les.</p>}
       </Section>
 
-      {view === 'list' ? (
+      {multi ? (
+        <SngView snap={snap} lateRegOpen={lateRegOpen} />
+      ) : view === 'list' ? (
         <Section title="Joueurs" right={<input className="input w-56" placeholder="Rechercher un joueur..." value={q} onChange={(e) => setQ(e.target.value)} />}>
           {snap.players.length === 0 ? (
             <Empty icon={<UserPlus size={32} />} title="Aucun joueur">
@@ -411,5 +419,99 @@ function EditPlayer({ snap, player, onClose }: { snap: TournamentSnapshot; playe
         {err && <p className="text-sm text-red-300">{err}</p>}
       </div>
     </Modal>
+  );
+}
+
+function SngView({ snap, lateRegOpen }: { snap: TournamentSnapshot; lateRegOpen: boolean }) {
+  const t = snap.tournament;
+  const run = useLiveAction(t.id);
+  const confirm = useConfirm();
+  const [bust, setBust] = useState<Player | null>(null);
+  const [names, setNames] = useState<Record<number, string>>({});
+  if (snap.tables.length === 0) {
+    return (
+      <Empty icon={<Plus size={30} />} title="Aucun SnG">
+        Ajoutez votre premier SnG, ou ajoutez des joueurs : ils seront répartis automatiquement.
+      </Empty>
+    );
+  }
+  return (
+    <div className="grid gap-4 md:grid-cols-2">
+      {snap.tables.map((tb) => {
+        const ps = snap.players.filter((p) => p.sngGroup === tb.number);
+        const active = ps.filter((p) => p.status === 'active').sort((a, b) => (a.seatNumber ?? 0) - (b.seatNumber ?? 0));
+        const out = ps.filter((p) => p.status === 'eliminated').sort((a, b) => (a.finishRank ?? 0) - (b.finishRank ?? 0));
+        const done = active.length === 1 && ps.length > 1;
+        const add = async () => {
+          const pseudo = (names[tb.number] ?? '').trim();
+          if (!pseudo) return;
+          const r = await run(() => api.post(`/tournaments/${t.id}/players`, { pseudo, sngGroup: tb.number, override: true }), `${pseudo} ajouté au SnG ${tb.number}`);
+          if (r) setNames({ ...names, [tb.number]: '' });
+        };
+        return (
+          <div key={tb.id} className={cx('card p-4', done && 'border-accent-500/50')}>
+            <div className="mb-3 flex items-center justify-between">
+              <h4 className="font-bold">
+                SnG {tb.number} <span className="text-sm font-normal text-zinc-400">· {active.length}/{ps.length} en jeu · max {t.settings.maxPerTable}</span>
+              </h4>
+              {ps.length === 0 && (
+                <button
+                  className="rounded-lg p-1.5 text-zinc-500 hover:text-red-300"
+                  aria-label="Supprimer ce SnG"
+                  onClick={async () => {
+                    if (await confirm({ title: `Supprimer le SnG ${tb.number} ?`, danger: true, confirmLabel: 'Supprimer' })) await run(() => api.del(`/tournaments/${t.id}/tables/${tb.number}`));
+                  }}
+                >
+                  <Trash2 size={15} />
+                </button>
+              )}
+            </div>
+            {done && (
+              <p className="mb-2 flex items-center gap-2 rounded-lg bg-accent-500/10 px-3 py-2 text-sm font-semibold text-accent-300">
+                <Trophy size={15} /> Vainqueur : {active[0].pseudo}
+              </p>
+            )}
+            <ul className="space-y-1">
+              {active.map((p) => (
+                <li key={p.id} className="flex items-center gap-2 rounded-lg bg-white/5 px-3 py-1.5 text-sm">
+                  <span className="w-6 text-xs text-zinc-500">S{p.seatNumber}</span>
+                  <span className="flex-1 font-semibold">{p.pseudo}</span>
+                  {!done && (
+                    <button className="btn-danger btn-sm" onClick={() => setBust(p)}>
+                      <UserMinus size={13} /> Sortant
+                    </button>
+                  )}
+                </li>
+              ))}
+            </ul>
+            {out.length > 0 && (
+              <div className="mt-3">
+                <p className="eyebrow mb-1">Sortis</p>
+                <ul className="space-y-1">
+                  {out.map((p) => (
+                    <li key={p.id} className="flex items-center gap-2 px-3 text-sm text-zinc-400">
+                      <span className="w-6 text-xs">{p.finishRank}e</span>
+                      <span className="flex-1">{p.pseudo}</span>
+                      <button className="text-xs hover:text-white" onClick={() => run(() => api.post(`/tournaments/${t.id}/players/${p.id}/undo-bust`), `${p.pseudo} réintégré`)}>
+                        Réintégrer
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {ps.length < t.settings.maxPerTable && (
+              <div className="mt-3 flex gap-2">
+                <input className="input" placeholder="Pseudo du joueur" value={names[tb.number] ?? ''} onChange={(e) => setNames({ ...names, [tb.number]: e.target.value })} onKeyDown={(e) => e.key === 'Enter' && add()} />
+                <button className="btn-ghost btn-sm" onClick={add}>
+                  <UserPlus size={14} />
+                </button>
+              </div>
+            )}
+          </div>
+        );
+      })}
+      {bust && <BustFlow snap={snap} open initialVictim={bust} onClose={() => setBust(null)} lateRegOpen={lateRegOpen} />}
+    </div>
   );
 }

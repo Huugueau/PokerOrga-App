@@ -53,10 +53,10 @@ export function PlayerPicker({
 }
 
 /** Flux complet d'élimination : joueur → re-entry ? → éliminateur → résultat. */
-export function BustFlow({ snap, open, onClose, lateRegOpen }: { snap: TournamentSnapshot; open: boolean; onClose: () => void; lateRegOpen: boolean }) {
+export function BustFlow({ snap, open, onClose, lateRegOpen, initialVictim }: { snap: TournamentSnapshot; open: boolean; onClose: () => void; lateRegOpen: boolean; initialVictim?: Player }) {
   const t = snap.tournament;
   const run = useLiveAction(t.id);
-  const [victim, setVictim] = useState<Player | null>(null);
+  const [victim, setVictim] = useState<Player | null>(initialVictim ?? null);
   const [again, setAgain] = useState<boolean | null>(null);
   const [result, setResult] = useState<{ title: string; lines: string[]; envelope?: number } | null>(null);
   const active = snap.players.filter((p) => p.status === 'active');
@@ -151,7 +151,7 @@ export function BustFlow({ snap, open, onClose, lateRegOpen }: { snap: Tournamen
     title = `Qui a éliminé ${victim.pseudo} ?`;
     body = (
       <PlayerPicker
-        players={active}
+        players={t.settings.multiSng ? active.filter((p) => p.sngGroup === victim.sngGroup) : active}
         exclude={victim.id}
         onPick={(k) => submit(victim, !!again, k)}
         extra={
@@ -198,6 +198,7 @@ export function AddPlayerModal({ snap, onClose, lateRegOpen }: { snap: Tournamen
   const run = useLiveAction(t.id);
   const confirm = useConfirm();
   const [form, setForm] = useState({ pseudo: '', firstName: '', lastName: '' });
+  const [group, setGroup] = useState<number | ''>('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const submit = async (e: React.FormEvent) => {
@@ -211,7 +212,7 @@ export function AddPlayerModal({ snap, onClose, lateRegOpen }: { snap: Tournamen
     setBusy(true);
     setError(null);
     try {
-      await api.post(`/tournaments/${t.id}/players`, { ...form, override });
+      await api.post(`/tournaments/${t.id}/players`, { ...form, override, ...(t.settings.multiSng && group !== '' ? { sngGroup: group } : {}) });
       await run(async () => null, `${form.pseudo} ajouté`);
       setForm({ pseudo: '', firstName: '', lastName: '' });
     } catch (err) {
@@ -237,6 +238,20 @@ export function AddPlayerModal({ snap, onClose, lateRegOpen }: { snap: Tournamen
             <input className="input" value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} placeholder="Facultatif" />
           </div>
         </div>
+        {t.settings.multiSng && (
+          <div>
+            <label className="label">Sit-and-Go</label>
+            <select className="input" value={group} onChange={(e) => setGroup(e.target.value === '' ? '' : Number(e.target.value))}>
+              <option value="">Le moins rempli (auto)</option>
+              {snap.tables.map((tb) => (
+                <option key={tb.number} value={tb.number}>
+                  SnG {tb.number} · {snap.players.filter((p) => p.sngGroup === tb.number && p.status === 'active').length}/{t.settings.maxPerTable}
+                </option>
+              ))}
+              <option value={(snap.tables.at(-1)?.number ?? 0) + 1}>Nouveau SnG</option>
+            </select>
+          </div>
+        )}
         {error && <p className="text-sm text-red-300">{error}</p>}
         <div className="flex justify-end gap-2 pt-2">
           <button type="button" className="btn-ghost" onClick={onClose}>

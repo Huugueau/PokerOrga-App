@@ -1,6 +1,7 @@
 import { and, desc, eq, inArray, isNull, sql } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import {
+  applyClockAction,
   clockInfo,
   drawEnvelope,
   drawSeats,
@@ -52,7 +53,7 @@ export async function seatPlayer(ctx: MutationCtx, playerId: string) {
   return res.seat;
 }
 
-export async function insertPlayers(ctx: MutationCtx, rows: { pseudo: string; firstName?: string | null; lastName?: string | null; registrationId?: string | null; memberId?: string | null; present?: boolean }[]) {
+export async function insertPlayers(ctx: MutationCtx, rows: { pseudo: string; firstName?: string | null; lastName?: string | null; registrationId?: string | null; memberId?: string | null; present?: boolean; sngGroup?: number }[]) {
   const { tx, t } = ctx;
   const existing = await loadPlayers(tx, t.id);
   const seen = new Set(existing.map((p) => p.pseudo.toLowerCase()));
@@ -78,11 +79,39 @@ export async function insertPlayers(ctx: MutationCtx, rows: { pseudo: string; fi
         present: r.present ?? false,
       })
       .returning();
-    await seatPlayer(ctx, p.id);
+    if (t.settings.multiSng) await seatInSng(ctx, p.id, r.sngGroup);
+    else await seatPlayer(ctx, p.id);
     added.push(p.pseudo);
   }
   if (added.length > 0) await rebalance(ctx);
   return { added, skipped };
+}
+
+/** Place un joueur dans un SnG (table = SnG) : groupe demandé ou le moins rempli. */
+async function seatInSng(ctx: MutationCtx, playerId: string, group?: number) {
+  const { tx, t } = ctx;
+  const tables = await loadTables(tx, t.id);
+  const active = (await loadPlayers(tx, t.id)).filter((p) => p.status === 'active' && p.id !== playerId);
+  const count = (n: number) => active.filter((p) => p.sngGroup === n).length;
+  let target = group;
+  if (target == null) {
+    const open = tables.map((tb) => tb.number).filter((n) => count(n) < t.settings.maxPerTable).sort((a, b) => count(a) - count(b) || a - b);
+    target = open[0] ?? (tables.length ? Math.max(...tables.map((tb) => tb.number)) + 1 : 1);
+  }
+  if (!tables.some((tb) => tb.number === target)) await tx.insert(tournamentTables).values({ tournamentId: t.id, number: target });
+  if (count(target) >= t.settings.maxPerTable) throw bad(`Ce SnG est complet (${t.settings.maxPerTable} joueurs).`);
+  const taken = new Set(active.filter((p) => p.sngGroup === target).map((p) => p.seatNumber));
+  let seat = 1;
+  while (taken.has(seat)) seat++;
+  await tx.update(players).set({ sngGroup: target, tableNumber: target, seatNumber: seat }).where(eq(players.id, playerId));
+}
+
+/** Met le timer en pause quand tous les SnG ont leur vainqueur. */
+async function pauseIfAllSngDone(ctx: MutationCtx) {
+  const all = await loadPlayers(ctx.tx, ctx.t.id);
+  const groups = new Set(all.map((p) => p.sngGroup).filter((g) => g != null));
+  const done = [...groups].every((g) => all.filter((p) => p.sngGroup === g && p.status === 'active').length <= 1);
+  if (done && groups.size > 0) ctx.patch.clock = applyClockAction(ctx.patch.clock ?? ctx.t.clock, ctx.t.structure, ctx.now, { action: 'pause' });
 }
 
 async function logAction(ctx: MutationCtx, playerId: string, type: string, payload: Record<string, unknown> = {}) {
@@ -162,7 +191,10 @@ export async function playerRoutes(app: FastifyInstance) {
           throw bad('Ce joueur a atteint sa limite de recaves.');
         }
       }
-      if (!body.again && activeBefore <= 1) throw bad('Le dernier joueur en lice est le vainqueur.');
+      if (t.settings.multiSng) {
+        const inGroup = all.filter((p) => p.status === 'active' && p.sngGroup === victim.sngGroup).length;
+        if (inGroup <= 1) throw bad('Le dernier joueur en lice est le vainqueur de ce SnG.');
+      } else if (!body.again && activeBefore <= 1) throw bad('Le dernier joueur en lice est le vainqueur.');
 
       // éliminateur & primes
       let killer: PlayerRow | undefined;
@@ -175,6 +207,7 @@ export async function playerRoutes(app: FastifyInstance) {
       let envelope: { id: string; amount: number; group: string } | null = null;
       const bType = t.settings.bounty.type;
       const victimBounty = Number(victim.bountyValue);
+      if (killer && t.settings.multiSng && killer.sngGroup !== victim.sngGroup) throw bad("L'éliminateur doit jouer le même SnG.");
       if (killer && bType === 'fixed') won = victimBounty;
       if (killer && bType === 'progressive') {
         won = victimBounty / 2;
@@ -230,6 +263,7 @@ export async function playerRoutes(app: FastifyInstance) {
           .where(eq(players.id, pid));
       }
       await logAction(ctx, pid, 'bust', payload);
+      if (t.settings.multiSng) await pauseIfAllSngDone(ctx);
       const moves = await rebalance(ctx);
       return { ok: true, newSeat, envelope, moves };
     });

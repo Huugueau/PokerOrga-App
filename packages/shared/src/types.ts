@@ -34,6 +34,8 @@ export interface TournamentSettings {
   breakTablesHighToLow: boolean;
   bounty: BountySettings;
   showLocalClock: boolean;
+  /** Session Multi Sit-and-Go : chaque table est un SnG indépendant sur le timer partagé. */
+  multiSng: boolean;
 }
 
 export interface Level {
@@ -141,6 +143,7 @@ export interface Player {
   present: boolean;
   registrationId: string | null;
   memberId: string | null;
+  sngGroup: number | null;
   createdAt: string;
 }
 

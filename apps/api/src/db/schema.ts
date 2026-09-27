@@ -112,6 +112,7 @@ export const players = pgTable(
     present: boolean('present').notNull().default(false),
     registrationId: uuid('registration_id'),
     memberId: uuid('member_id'),
+    sngGroup: integer('sng_group'),
     createdAt: ts('created_at').notNull().defaultNow(),
   },
   (t) => [

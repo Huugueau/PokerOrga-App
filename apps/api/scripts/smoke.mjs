@@ -107,4 +107,22 @@ const ci = await call('POST', `/tournaments/${fin.nextId}/checkin`, { code: mem.
 assert(ci.state === 'added', 'scan carte membre → ajouté au live');
 const ci2 = await call('POST', `/tournaments/${fin.nextId}/checkin`, { code: `https://x/p/${mem.code}` });
 assert(ci2.state === 'already', 'second scan → déjà présent');
+// Multi Sit-and-Go
+const { id: sngId } = await call('POST', '/tournaments', { title: 'Session SnG' });
+await call('PATCH', `/tournaments/${sngId}`, { settings: { multiSng: true, maxPerTable: 3 } });
+for (const [pseudo, g] of [['A1', 1], ['A2', 1], ['A3', 1], ['B1', 2], ['B2', 2]]) await call('POST', `/tournaments/${sngId}/players`, { pseudo, sngGroup: g });
+let sng = await call('GET', `/tournaments/${sngId}/full`);
+assert(sng.tournament.settings.isFree && sng.tables.length === 2, 'session Multi SnG : 2 SnG, gratuit imposé');
+await call('POST', `/tournaments/${sngId}/clock`, { action: 'play' });
+const byPseudo = (p) => sng.players.find((x) => x.pseudo === p);
+await call('POST', `/tournaments/${sngId}/players/${byPseudo('A3').id}/bust`, { eliminatedBy: byPseudo('A1').id });
+await call('POST', `/tournaments/${sngId}/players/${byPseudo('A2').id}/bust`, {});
+await call('POST', `/tournaments/${sngId}/players/${byPseudo('B2').id}/bust`, {});
+sng = await call('GET', `/tournaments/${sngId}/full`);
+assert(byPseudo('A1').finishRank === 1 && byPseudo('A3').finishRank === 3 && byPseudo('B1').finishRank === 1, 'classement par SnG');
+assert(!sng.tournament.clock.running, 'timer en pause quand tous les SnG sont terminés');
+const sngChamp = await call('POST', '/championships', { name: 'SnG 2026', type: 'sng', pointsGrid: [10, 5, 2] });
+await call('POST', `/championships/${sngChamp.id}/import`, { tournamentId: sngId });
+const sv = await call('GET', `/championships/${sngChamp.id}`);
+assert(sv.imports.length === 2 && sv.ranking.find((r) => r.name === 'A1').points === 10, 'export SnG : un import par SnG, barème appliqué');
 console.log('\nTous les tests de fumée sont passés.');

@@ -56,9 +56,22 @@ export function GeneralPanel({ snap }: { snap: TournamentSnapshot }) {
         </div>
       </Section>
 
+      <Section title="Type de tournoi" right={started ? <span className="chip"><Lock size={12} /> Verrouillé</span> : null}>
+        <Segmented<string>
+          value={s.multiSng ? 'sng' : 'classic'}
+          disabled={started}
+          onChange={(v) => set({ multiSng: v === 'sng' })}
+          options={[
+            { value: 'classic', label: 'Tournoi classique' },
+            { value: 'sng', label: 'Session Multi Sit-and-Go' },
+          ]}
+        />
+        {s.multiSng && <p className="mt-3 text-sm text-zinc-400">Plusieurs Sit-and-Go indépendants sur le même timer de blindes. Freezeout et gratuit sont imposés ; chaque SnG a ses joueurs et son classement. Le timer se met en pause quand tous les SnG sont terminés.</p>}
+      </Section>
+
       <Favorites snap={snap} />
 
-      <Section title="Format d'entrée" subtitle="Ce qui se passe quand un joueur est éliminé" right={started ? <span className="chip"><Lock size={12} /> {lockedHint}</span> : null}>
+      {!s.multiSng && <Section title="Format d'entrée" subtitle="Ce qui se passe quand un joueur est éliminé" right={started ? <span className="chip"><Lock size={12} /> {lockedHint}</span> : null}>
         <Segmented<EntryFormat>
           value={s.entryFormat}
           disabled={started}
@@ -127,7 +140,7 @@ export function GeneralPanel({ snap }: { snap: TournamentSnapshot }) {
             </div>
           )}
         </div>
-      </Section>
+      </Section>}
 
       <Section title="Jetons & économie" subtitle="Stack, buy-in et places payées">
         <div className="grid gap-5 md:grid-cols-2">
@@ -187,7 +200,7 @@ export function GeneralPanel({ snap }: { snap: TournamentSnapshot }) {
         </div>
       </Section>
 
-      <BountySection snap={snap} />
+      {!s.multiSng && <BountySection snap={snap} />}
 
       <Section title="Affichage">
         <Toggle checked={s.showLocalClock} onChange={(v) => set({ showLocalClock: v })} label="Afficher l'heure locale" hint="Heure de l'écran, sur le timer et la TV" />

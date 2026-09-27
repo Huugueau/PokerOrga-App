@@ -30,6 +30,7 @@ export const settingsSchema = z.object({
   breakTablesHighToLow: z.boolean(),
   bounty: bountySchema,
   showLocalClock: z.boolean(),
+  multiSng: z.boolean().default(false),
 });
 
 export const levelSchema = z.object({
@@ -76,6 +77,7 @@ export const tournamentPatchSchema = z.object({
 });
 
 export const playerInputSchema = z.object({
+  sngGroup: z.number().int().min(1).max(100).optional(),
   pseudo: z.string().trim().min(1, 'Le pseudo est obligatoire.').max(40),
   firstName: z.string().trim().max(60).nullish(),
   lastName: z.string().trim().max(60).nullish(),

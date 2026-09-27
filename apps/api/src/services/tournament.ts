@@ -79,6 +79,7 @@ export function toPlayer(r: PlayerRow): Player {
     present: r.present,
     registrationId: r.registrationId,
     memberId: r.memberId,
+    sngGroup: r.sngGroup,
     createdAt: r.createdAt.toISOString(),
   };
 }
@@ -109,7 +110,18 @@ export async function createTournament(ownerId: string, init: Partial<{ title: s
 }
 
 /** Classe les joueurs : rangs dynamiques (éliminés du plus récent au plus ancien) et gains. */
-export function rankPlayers(list: Player[], payouts: number[], lots: string[], lotsMode: boolean, finished: boolean): Player[] {
+export function rankPlayers(list: Player[], payouts: number[], lots: string[], lotsMode: boolean, finished: boolean, multiSng = false): Player[] {
+  if (multiSng) {
+    const groups = new Map<number, Player[]>();
+    for (const p of list) {
+      const g = p.sngGroup ?? 0;
+      if (!groups.has(g)) groups.set(g, []);
+      groups.get(g)!.push(p);
+    }
+    const ranked = new Map<string, Player>();
+    for (const g of groups.values()) for (const p of rankPlayers(g, [], [], false, finished)) ranked.set(p.id, p);
+    return list.map((p) => ranked.get(p.id)!);
+  }
   const active = list.filter((p) => p.status === 'active');
   const elim = list
     .filter((p) => p.status === 'eliminated')
@@ -141,7 +153,7 @@ export async function buildSnapshot(row: TournamentRow, now = Date.now()): Promi
   const list = prow.map(toPlayer);
   const stats = computeStats(t.settings, list);
   const computedPayouts = computedPayoutsFor(t, stats.prizePool, stats.totalEntries);
-  const ranked = rankPlayers(list, computedPayouts, t.payouts.lots, t.payouts.type === 'lots', t.status === 'finished');
+  const ranked = rankPlayers(list, computedPayouts, t.payouts.lots, t.payouts.type === 'lots', t.status === 'finished', t.settings.multiSng);
   const r = resolveClock(t.clock, t.structure, now);
   const info = clockInfo(t.structure, r);
   return {

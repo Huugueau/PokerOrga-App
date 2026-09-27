@@ -169,7 +169,33 @@ export async function championshipRoutes(app: FastifyInstance) {
     if (dup) throw bad('Ce tournoi a déjà été exporté vers ce championnat.');
     const snap = await buildSnapshot(trow);
     if (snap.players.length < 2 || snap.players.some((p) => p.finishRank == null)) {
+      if (snap.tournament.settings.multiSng) throw bad("Tous les SnG doivent être terminés avant l'export.");
       throw bad("Le tournoi n'est pas terminé. Éliminez tous les joueurs avant d'exporter.");
+    }
+    if (snap.tournament.settings.multiSng) {
+      const groups = [...new Set(snap.players.map((p) => p.sngGroup ?? 0))].sort((a, b) => a - b);
+      await db.transaction(async (tx) => {
+        for (const g of groups) {
+          const gp = snap.players.filter((p) => (p.sngGroup ?? 0) === g);
+          const [imp] = await tx
+            .insert(championshipImports)
+            .values({ championshipId: id, tournamentId, tournamentName: `${trow.title} · SnG ${g}`, entries: gp.length, playedAt: trow.startedAt ?? trow.createdAt })
+            .returning();
+          for (const p of gp) {
+            const cpId = await upsertChampPlayer(tx, id, p.pseudo);
+            await tx.insert(championshipResults).values({
+              importId: imp.id,
+              playerId: cpId,
+              rank: p.finishRank!,
+              points: c.pointsGrid.length > 0 ? (c.pointsGrid[p.finishRank! - 1] ?? 0) : championshipPoints(gp.length, p.finishRank!),
+              kills: p.kills,
+            });
+          }
+        }
+        const ids = new Set([...(trow.exportedChampionshipIds ?? []), id]);
+        await tx.update(tournaments).set({ exportedChampionshipIds: [...ids] }).where(eq(tournaments.id, tournamentId));
+      });
+      return { ok: true };
     }
     const entries = snap.stats.totalEntries;
     await db.transaction(async (tx) => {

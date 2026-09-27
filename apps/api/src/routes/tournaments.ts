@@ -46,6 +46,13 @@ function checkSettings(next: TournamentSettings, prev: TournamentSettings, start
     if (s.entryFormat !== prev.entryFormat) throw bad('Verrouillé : tournoi commencé. Le format ne peut plus être modifié.');
     if (s.bounty.type !== prev.bounty.type) throw bad('Le type de bounty ne peut plus être modifié une fois le tournoi commencé.');
   }
+  if (s.multiSng) {
+    s.entryFormat = 'freezeout';
+    s.isFree = true;
+    s.autoBalance = false;
+    s.bounty = { ...s.bounty, type: 'none' };
+  }
+  if (started && s.multiSng !== prev.multiSng) throw bad('Type de tournoi verrouillé : tournoi commencé.');
   if (s.entryFormat === 'rebuys' && s.bounty.type !== 'none') s.bounty = { ...s.bounty, type: 'none' };
   if (s.entryFormat !== 'rebuys') s.addonsEnabled = false;
   if (s.bounty.type !== 'none' && s.bounty.amount > s.buyin) throw bad(`La prime ne peut pas dépasser le buy-in (${s.buyin} €).`);

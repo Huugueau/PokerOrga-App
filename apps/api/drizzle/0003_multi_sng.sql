@@ -1,0 +1,1 @@
+ALTER TABLE "players" ADD COLUMN "sng_group" integer;

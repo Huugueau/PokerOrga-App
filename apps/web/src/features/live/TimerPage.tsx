@@ -483,8 +483,8 @@ function DesktopTimer({
             </div>
           )}
           <div className="glass flex-1 rounded-2xl p-4">
-            <p className="eyebrow mb-3 text-center">Places payées</p>
-            <PayoutList snap={snap} />
+            <p className="eyebrow mb-3 text-center">{t.settings.multiSng ? 'Sit-and-Go' : 'Places payées'}</p>
+            {t.settings.multiSng ? <SngStatus snap={snap} /> : <PayoutList snap={snap} />}
           </div>
         </aside>
       </main>
@@ -632,5 +632,24 @@ function SeekBar({ tournamentId, clock, className }: { tournamentId: string; clo
       onKeyUp={commit}
       onTouchEnd={commit}
     />
+  );
+}
+
+function SngStatus({ snap }: { snap: TournamentSnapshot }) {
+  if (snap.tables.length === 0) return <p className="text-center text-sm text-zinc-400">Ajoutez des joueurs pour créer les SnG.</p>;
+  return (
+    <ul className="space-y-1.5">
+      {snap.tables.map((tb) => {
+        const ps = snap.players.filter((p) => p.sngGroup === tb.number);
+        const active = ps.filter((p) => p.status === 'active');
+        const winner = active.length === 1 && ps.length > 1 ? active[0] : null;
+        return (
+          <li key={tb.number} className="flex items-center justify-between gap-2 rounded-lg bg-white/5 px-3 py-1.5 text-sm">
+            <span className="font-semibold">SnG {tb.number}</span>
+            <span className="tabular">{winner ? <span className="accent font-bold">🏆 {winner.pseudo}</span> : `${active.length}/${ps.length} en jeu`}</span>
+          </li>
+        );
+      })}
+    </ul>
   );
 }

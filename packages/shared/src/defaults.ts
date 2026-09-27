@@ -29,6 +29,7 @@ export const DEFAULT_SETTINGS: TournamentSettings = {
   breakTablesHighToLow: true,
   bounty: { type: 'none', amount: 0, drawFrom: null },
   showLocalClock: false,
+  multiSng: false,
 };
 
 type L = [number, number, number, number, boolean?];
