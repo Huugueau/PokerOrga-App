@@ -51,6 +51,13 @@ async function recap(series: Series) {
     const d = days.find((x) => x.tournamentId === p.tournamentId);
     if (d?.stage === 1) entries.set(k, (entries.get(k) ?? 0) + p.entries);
   }
+  // qualifiés dont le jour suivant n'a pas encore été joué : en tête (classement provisoire)
+  for (const q of quals.filter((x) => !days.find((d) => d.id === x.toDayId)?.tournamentId).sort((a, b) => b.stack - a.stack)) {
+    const k = q.pseudo.toLowerCase();
+    if (seen.has(k)) continue;
+    seen.add(k);
+    rows.push({ pseudo: q.pseudo, rank: rows.length + 1, bestStage: (days.find((d) => d.id === q.toDayId)?.stage ?? 2), dayLabel: `Qualifié → ${days.find((d) => d.id === q.toDayId)?.label ?? ''}`, kills: kills.get(k) ?? 0, entries: entries.get(k) ?? 0, prize: null });
+  }
   for (const stage of stages) {
     const sDays = days.filter((d) => d.stage === stage && d.tournamentId);
     const candidates = plist

@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
-import { CalendarDays, History, LogOut, Menu, PlayCircle, Shield, SquareStack, Trophy, User, X } from 'lucide-react';
+import { CalendarDays, History, Layers3, LogOut, Menu, PlayCircle, Shield, SquareStack, Trophy, User, X } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
@@ -9,6 +9,7 @@ import { cx } from './ui';
 const NAV = [
   { to: '/lives', label: 'Mes lives', icon: SquareStack },
   { to: '/planning', label: 'Mon planning', icon: CalendarDays },
+  { to: '/flights', label: 'Tournois flights', icon: Layers3 },
   { to: '/championships', label: 'Championnats', icon: Trophy },
   { to: '/club', label: 'Mon club', icon: Shield },
   { to: '/history', label: 'Historique', icon: History },

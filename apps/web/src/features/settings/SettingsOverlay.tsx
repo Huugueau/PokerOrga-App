@@ -5,6 +5,7 @@ import {
   Download,
   History,
   Layers,
+  Layers3,
   ListOrdered,
   LogOut,
   Medal,
@@ -43,6 +44,7 @@ const TABS: { key: SettingsTab; label: string; icon: typeof Settings2 }[] = [
 const LINKS = [
   { to: '/lives', label: 'Mes lives', icon: SquareStack },
   { to: '/planning', label: 'Mon planning', icon: CalendarDays },
+  { to: '/flights', label: 'Tournois flights', icon: Layers3 },
   { to: '/championships', label: 'Championnats', icon: Trophy },
   { to: '/club', label: 'Mon club', icon: Shield },
   { to: '/history', label: 'Historique', icon: History },
