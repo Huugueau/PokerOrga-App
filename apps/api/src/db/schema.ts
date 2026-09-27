@@ -115,6 +115,8 @@ export const players = pgTable(
     registrationId: uuid('registration_id'),
     memberId: uuid('member_id'),
     sngGroup: integer('sng_group'),
+    /** Tapis de départ spécifique (joueur qualifié d'un jour précédent). */
+    startChips: integer('start_chips'),
     createdAt: ts('created_at').notNull().defaultNow(),
   },
   (t) => [
@@ -394,4 +396,45 @@ export const clubRequests = pgTable('club_requests', {
   membershipType: text('membership_type').$type<'live' | 'online' | 'both'>().notNull().default('live'),
   status: text('status').$type<'pending' | 'accepted' | 'refused'>().notNull().default('pending'),
   createdAt: ts('created_at').notNull().defaultNow(),
+});
+
+// ---------------- Tournois flights (multi-jours) ----------------
+export const flightSeries = pgTable('flight_series', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  ownerId: uuid('owner_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  qualifyPct: integer('qualify_pct').notNull().default(15),
+  day1Stack: integer('day1_stack').notNull().default(20000),
+  status: text('status').$type<'open' | 'closed'>().notNull().default('open'),
+  createdAt: ts('created_at').notNull().defaultNow(),
+});
+
+export const flightDays = pgTable('flight_days', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  seriesId: uuid('series_id')
+    .notNull()
+    .references(() => flightSeries.id, { onDelete: 'cascade' }),
+  label: text('label').notNull(),
+  stage: integer('stage').notNull().default(1),
+  targetDayId: uuid('target_day_id'),
+  tournamentId: uuid('tournament_id'),
+  status: text('status').$type<'pending' | 'running' | 'closed'>().notNull().default('pending'),
+  closedAt: ts('closed_at'),
+  createdAt: ts('created_at').notNull().defaultNow(),
+});
+
+export const flightQualifiers = pgTable('flight_qualifiers', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  seriesId: uuid('series_id')
+    .notNull()
+    .references(() => flightSeries.id, { onDelete: 'cascade' }),
+  fromDayId: uuid('from_day_id').notNull(),
+  toDayId: uuid('to_day_id').notNull(),
+  pseudo: text('pseudo').notNull(),
+  firstName: text('first_name'),
+  lastName: text('last_name'),
+  memberId: uuid('member_id'),
+  stack: integer('stack').notNull(),
 });

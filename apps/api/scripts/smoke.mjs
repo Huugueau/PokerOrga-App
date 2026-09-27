@@ -151,4 +151,50 @@ await call('POST', `/tournaments/${sideId}/clock`, { action: 'play' });
 const main2 = await call('GET', `/tournaments/${mainId}/full`);
 side = await call('GET', `/tournaments/${sideId}/full`);
 assert(!main2.tournament.clock.running && main2.tournament.clockGroupId === null && side.tournament.clockGroupId === null, 'séparation : horloges indépendantes');
+// Tournois flights
+const series = await call('POST', '/flights', { name: 'Main Event', qualifyPct: 50, day1Stack: 30000 });
+let fl = await call('GET', `/flights/${series.id}`);
+const day2 = fl.days.find((d) => d.label === 'Day 2');
+const day1a = fl.days.find((d) => d.label === 'Day 1A');
+const day1b = await call('POST', `/flights/${series.id}/days`, { label: 'Day 1B', stage: 1, targetDayId: day2.id });
+let refusedLaunch = false;
+try {
+  await call('POST', `/flights/${series.id}/days/${day2.id}/launch`);
+} catch {
+  refusedLaunch = true;
+}
+assert(refusedLaunch, 'flights : Day 2 non lançable avant la clôture des Day 1');
+async function playDay(dayId, names, bustCount, stack) {
+  const { tournamentId } = await call('POST', `/flights/${series.id}/days/${dayId}/launch`);
+  for (const pseudo of names) await call('POST', `/tournaments/${tournamentId}/players`, { pseudo });
+  await call('POST', `/tournaments/${tournamentId}/clock`, { action: 'play' });
+  let s = await call('GET', `/tournaments/${tournamentId}/full`);
+  for (let i = 0; i < bustCount; i++) {
+    const act = s.players.filter((p) => p.status === 'active');
+    await call('POST', `/tournaments/${tournamentId}/players/${act[act.length - 1].id}/bust`, { eliminatedBy: act[0].id });
+    s = await call('GET', `/tournaments/${tournamentId}/full`);
+  }
+  const stacks = Object.fromEntries(s.players.filter((p) => p.status === 'active').map((p) => [p.id, stack]));
+  await call('POST', `/flights/${series.id}/days/${dayId}/close`, { stacks });
+  return tournamentId;
+}
+await playDay(day1a.id, ['F1', 'F2', 'F3', 'F4'], 2, 50000);
+await playDay(day1b.id, ['G1', 'G2', 'G3', 'G4'], 2, 60000);
+const { tournamentId: d2t } = await call('POST', `/flights/${series.id}/days/${day2.id}/launch`);
+let d2 = await call('GET', `/tournaments/${d2t}/full`);
+assert(d2.players.length === 4 && d2.stats.chipsInPlay === 220000, 'flights : Day 2 avec les 4 qualifiés et leurs tapis bagués');
+await call('POST', `/tournaments/${d2t}/clock`, { action: 'play' });
+while (d2.players.filter((p) => p.status === 'active').length > 1) {
+  const act = d2.players.filter((p) => p.status === 'active');
+  await call('POST', `/tournaments/${d2t}/players/${act[act.length - 1].id}/bust`, {});
+  d2 = await call('GET', `/tournaments/${d2t}/full`);
+}
+await call('POST', `/flights/${series.id}/days/${day2.id}/close`, {});
+await call('POST', `/flights/${series.id}/close`);
+fl = await call('GET', `/flights/${series.id}`);
+assert(fl.recap.rows.length === 8 && fl.recap.totalEntries === 8 && fl.recap.rows[0].bestStage === 2 && fl.recap.rows[7].bestStage === 1, 'flights : classement global (Day 2 puis Day 1)');
+const flChamp = await call('POST', '/championships', { name: 'Flights 2026', type: 'mtt' });
+await call('POST', `/flights/${series.id}/export`, { championshipId: flChamp.id });
+const fv = await call('GET', `/championships/${flChamp.id}`);
+assert(fv.ranking.length === 8 && fv.ranking[0].points === Math.round(10 * Math.sqrt(8) * 10) / 10, 'flights : export championnat');
 console.log('\nTous les tests de fumée sont passés.');

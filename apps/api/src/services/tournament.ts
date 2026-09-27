@@ -83,6 +83,7 @@ export function toPlayer(r: PlayerRow): Player {
     registrationId: r.registrationId,
     memberId: r.memberId,
     sngGroup: r.sngGroup,
+    startChips: r.startChips,
     createdAt: r.createdAt.toISOString(),
   };
 }

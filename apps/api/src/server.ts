@@ -14,6 +14,7 @@ import { authRoutes, COOKIE } from './routes/auth';
 import { championshipRoutes } from './routes/championships';
 import { checkinRoutes } from './routes/checkin';
 import { clubRoutes } from './routes/club';
+import { flightRoutes } from './routes/flights';
 import { eventRoutes } from './routes/events';
 import { favoriteRoutes } from './routes/favorites';
 import { historyRoutes } from './routes/history';
@@ -74,6 +75,7 @@ export async function buildApp() {
       await api.register(eventRoutes);
       await api.register(clubRoutes);
       await api.register(checkinRoutes);
+      await api.register(flightRoutes);
     },
     { prefix: '/api' },
   );

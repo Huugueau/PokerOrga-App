@@ -145,6 +145,7 @@ export interface Player {
   registrationId: string | null;
   memberId: string | null;
   sngGroup: number | null;
+  startChips: number | null;
   createdAt: string;
 }
 

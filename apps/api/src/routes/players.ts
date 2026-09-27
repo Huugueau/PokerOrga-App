@@ -53,7 +53,7 @@ export async function seatPlayer(ctx: MutationCtx, playerId: string) {
   return res.seat;
 }
 
-export async function insertPlayers(ctx: MutationCtx, rows: { pseudo: string; firstName?: string | null; lastName?: string | null; registrationId?: string | null; memberId?: string | null; present?: boolean; sngGroup?: number }[]) {
+export async function insertPlayers(ctx: MutationCtx, rows: { pseudo: string; firstName?: string | null; lastName?: string | null; registrationId?: string | null; memberId?: string | null; present?: boolean; sngGroup?: number; startChips?: number | null }[]) {
   const { tx, t } = ctx;
   const existing = await loadPlayers(tx, t.id);
   const seen = new Set(existing.map((p) => p.pseudo.toLowerCase()));
@@ -76,6 +76,7 @@ export async function insertPlayers(ctx: MutationCtx, rows: { pseudo: string; fi
         bountyValue: baseBounty(t.settings),
         registrationId: r.registrationId ?? null,
         memberId: r.memberId ?? null,
+        startChips: r.startChips ?? null,
         present: r.present ?? false,
       })
       .returning();

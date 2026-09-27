@@ -36,6 +36,13 @@
       "when": 1790476098709,
       "tag": "0004_clock_group",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790496247587,
+      "tag": "0005_flights",
+      "breakpoints": true
     }
   ]
 }
