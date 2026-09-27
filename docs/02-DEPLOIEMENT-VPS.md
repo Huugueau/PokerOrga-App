@@ -44,18 +44,11 @@ nslookup poker.huugueau.com
 
 Dans le Cloud Panel Ionos, la **stratégie de pare-feu** du VPS doit autoriser les ports 80 et 443 (normalement déjà le cas puisque Nginx sert d'autres sites).
 
-## 2. Rendre l'image téléchargeable (une seule fois)
+## 2. Image Docker
 
-La CI publie `ghcr.io/huugueau/pokerorga-app`. Sur GitHub, un nouveau package est **privé** par défaut. Deux options :
+La CI publie `ghcr.io/huugueau/pokerorga-app` ; le package est **public** (il hérite de la visibilité du dépôt) : aucune connexion n'est nécessaire pour le télécharger.
 
-- **Le rendre public** (le plus simple, le code est déjà public) : github.com → ton profil → *Packages* → `pokerorga-app` → *Package settings* → *Change visibility* → Public.
-- **Le garder privé** : créer un token GitHub *classic* avec uniquement le droit `read:packages`, puis sur le VPS :
-  ```bash
-  docker login ghcr.io -u Huugueau
-  ```
-  (coller le token quand le mot de passe est demandé).
-
-Le package apparaît après le premier run CI réussi sur `main` qui contient le job `publish`.
+> Si le dépôt devient privé un jour : créer un token GitHub *classic* avec uniquement le droit `read:packages`, puis sur le VPS `docker login ghcr.io -u Huugueau` (coller le token comme mot de passe).
 
 ## 3. Docker sur le VPS
 
@@ -208,5 +201,5 @@ Revenir à une version précédente : `IMAGE=ghcr.io/huugueau/pokerorga-app:sha-
 | 502 Bad Gateway | `docker compose ps` ; `docker compose logs app --tail 100` ; port de `proxy_pass` = `APP_PORT` |
 | Impossible de se connecter (la session ne tient pas) | le site doit être ouvert en **https** (cookie `Secure`) |
 | Le timer TV ne se met plus à jour | vérifier que le bloc `location ~ ^/api/.*/stream$` est bien présent après le passage de Certbot |
-| `docker compose pull` refusé (denied) | package GHCR privé → étape 2 |
+| `docker compose pull` refusé (denied) | package GHCR devenu privé → étape 2 |
 | Upload refusé (413) | `client_max_body_size` dans le fichier Nginx |
