@@ -1,0 +1,1 @@
+ALTER TABLE "tournaments" ADD COLUMN "clock_group_id" uuid;

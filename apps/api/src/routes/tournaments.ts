@@ -1,4 +1,5 @@
 import { and, asc, desc, eq, ne } from 'drizzle-orm';
+import { randomUUID } from 'node:crypto';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import {
   applyClockAction,
@@ -77,7 +78,7 @@ export async function tournamentRoutes(app: FastifyInstance) {
       const t = toTournament(r);
       const stats = computeStats(t.settings, plist.map(toPlayer));
       const rc = resolveClock(t.clock, t.structure, Date.now());
-      out.push({ id: r.id, title: r.title, status: r.status, stats, levelIndex: rc.levelIndex, running: rc.running, createdAt: r.createdAt });
+      out.push({ id: r.id, title: r.title, status: r.status, stats, levelIndex: rc.levelIndex, running: rc.running, clockGroupId: r.clockGroupId, createdAt: r.createdAt });
     }
     return { tournaments: out };
   });
@@ -97,7 +98,7 @@ export async function tournamentRoutes(app: FastifyInstance) {
   });
 
   app.post('/tournaments', async (req) => {
-    const body = parse(z.object({ title: z.string().trim().max(80).optional(), fromConfigId: z.string().uuid().optional() }).default({}), req.body ?? {});
+    const body = parse(z.object({ title: z.string().trim().max(80).optional(), fromConfigId: z.string().uuid().optional(), linkTo: z.string().uuid().optional() }).default({}), req.body ?? {});
     let settings: TournamentSettings | undefined;
     if (body.fromConfigId) {
       const [cfg] = await db
@@ -105,6 +106,15 @@ export async function tournamentRoutes(app: FastifyInstance) {
         .from(favoriteConfigs)
         .where(and(eq(favoriteConfigs.id, body.fromConfigId), eq(favoriteConfigs.ownerId, userId(req))));
       if (cfg) settings = { ...DEFAULT_SETTINGS, ...cfg.settings };
+    }
+    if (body.linkTo) {
+      const src = await getOwned(body.linkTo, userId(req));
+      if (src.status === 'finished') throw bad('Action impossible sur ce tournoi.');
+      if (src.settings.multiSng) throw bad('Terminez la session Multi Sit-and-Go avant de lier les horloges.');
+      const groupId = src.clockGroupId ?? randomUUID();
+      if (!src.clockGroupId) await db.update(tournaments).set({ clockGroupId: groupId }).where(eq(tournaments.id, src.id));
+      const row = await createTournament(userId(req), { title: body.title || undefined, settings, structure: src.structure, clock: src.clock, clockGroupId: groupId });
+      return { id: row.id };
     }
     const row = await createTournament(userId(req), { title: body.title || undefined, settings });
     return { id: row.id };
@@ -126,6 +136,7 @@ export async function tournamentRoutes(app: FastifyInstance) {
       if (body.settings) {
         const merged = { ...t.settings, ...body.settings, bounty: { ...t.settings.bounty, ...(body.settings.bounty ?? {}) } };
         patch.settings = checkSettings(merged, t.settings, t.status !== 'prepared', u.rakeEnabled);
+        if (patch.settings.multiSng && ctx.row.clockGroupId) throw bad('Une horloge liée est active. Séparez ces tournois avant de lancer une session Multi Sit-and-Go.');
         if (patch.settings.bounty.type !== t.settings.bounty.type || patch.settings.bounty.amount !== t.settings.bounty.amount) {
           // prime de base pour tous les joueurs actifs (avant démarrage)
           if (t.status === 'prepared') {
@@ -163,6 +174,16 @@ export async function tournamentRoutes(app: FastifyInstance) {
       if (body.action === 'play' && t.status === 'prepared') {
         const plist = await loadPlayers(ctx.tx, t.id);
         if (plist.filter((p) => p.status === 'active').length < 2) throw bad('Ajoutez au moins 2 joueurs pour démarrer.');
+        if (ctx.row.clockGroupId) {
+          const others = await ctx.tx
+            .select({ id: tournaments.id, status: tournaments.status })
+            .from(tournaments)
+            .where(and(eq(tournaments.clockGroupId, ctx.row.clockGroupId), ne(tournaments.id, t.id), ne(tournaments.status, 'finished')));
+          for (const o of others.filter((x) => x.status === 'prepared')) {
+            const op = await loadPlayers(ctx.tx, o.id);
+            if (op.filter((p) => p.status === 'active').length < 2) throw bad('Chaque tournoi lié doit avoir au moins 2 joueurs pour démarrer.');
+          }
+        }
         ctx.patch.status = 'running';
         ctx.patch.startedAt = new Date(now);
       }
@@ -196,6 +217,7 @@ export async function tournamentRoutes(app: FastifyInstance) {
         pendingMoves: [],
         publicToken: publicToken(),
         startedAt: null,
+        clockGroupId: null,
         exportedChampionshipIds: [],
       });
     });
@@ -222,6 +244,7 @@ export async function tournamentRoutes(app: FastifyInstance) {
         clock: { levelIndex: r.levelIndex, remainingMs: r.remainingMs, running: false, anchorAt: null },
         pendingMoves: [],
         publicToken: publicToken(),
+        clockGroupId: null,
       });
     });
     const others = await otherLiveTournaments(uid, id);
@@ -239,6 +262,21 @@ export async function tournamentRoutes(app: FastifyInstance) {
     if (others.length === 0) throw bad('Impossible : un compte garde toujours un tournoi actif.');
     await db.delete(tournaments).where(eq(tournaments.id, id));
     return { ok: true, nextId: others[0].id };
+  });
+
+  /** Sépare ce live de l'horloge partagée (il garde son état actuel). */
+  app.post('/tournaments/:id/unlink', async (req) => {
+    const { id } = parse(idParam, req.params);
+    const uidv = userId(req);
+    const row = await getOwned(id, uidv);
+    if (!row.clockGroupId) throw bad("Ce tournoi n'a pas d'horloge liée.");
+    await mutateTournament(id, uidv, async (ctx) => {
+      ctx.patch.clockGroupId = null;
+    });
+    // s'il ne reste qu'un seul tournoi dans le groupe, il redevient indépendant
+    const rest = await db.select({ id: tournaments.id }).from(tournaments).where(and(eq(tournaments.clockGroupId, row.clockGroupId), ne(tournaments.status, 'finished')));
+    if (rest.length === 1) await mutateTournament(rest[0].id, uidv, async (ctx) => void (ctx.patch.clockGroupId = null));
+    return { ok: true };
   });
 
   app.post('/tournaments/:id/public-token', async (req) => {

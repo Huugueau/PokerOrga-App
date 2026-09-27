@@ -106,6 +106,7 @@ export interface Tournament {
   publicToken: string;
   version: number;
   pendingMoves: Move[];
+  clockGroupId: string | null;
   startedAt: string | null;
   finishedAt: string | null;
   exportedChampionshipIds: string[];
@@ -181,6 +182,8 @@ export interface TournamentSnapshot {
   computedPayouts: number[];
   lateRegOpen: boolean;
   serverTime: number;
+  /** Autres lives partageant l'horloge. */
+  linked: { id: string; title: string; activePlayers: number }[];
 }
 
 export interface User {

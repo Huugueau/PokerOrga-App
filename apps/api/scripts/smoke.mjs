@@ -125,4 +125,30 @@ const sngChamp = await call('POST', '/championships', { name: 'SnG 2026', type: 
 await call('POST', `/championships/${sngChamp.id}/import`, { tournamentId: sngId });
 const sv = await call('GET', `/championships/${sngChamp.id}`);
 assert(sv.imports.length === 2 && sv.ranking.find((r) => r.name === 'A1').points === 10, 'export SnG : un import par SnG, barème appliqué');
+// Horloge liée
+const { id: mainId } = await call('POST', '/tournaments', { title: 'Main Event' });
+const { id: sideId } = await call('POST', '/tournaments', { title: 'Side Event', linkTo: mainId });
+for (const pseudo of ['M1', 'M2']) await call('POST', `/tournaments/${mainId}/players`, { pseudo });
+await call('POST', `/tournaments/${sideId}/players`, { pseudo: 'S1' });
+let refused = false;
+try {
+  await call('POST', `/tournaments/${mainId}/clock`, { action: 'play' });
+} catch {
+  refused = true;
+}
+assert(refused, 'horloge liée : démarrage refusé si un tournoi lié a moins de 2 joueurs');
+await call('POST', `/tournaments/${sideId}/players`, { pseudo: 'S2' });
+await call('POST', `/tournaments/${mainId}/clock`, { action: 'play' });
+await call('POST', `/tournaments/${mainId}/clock`, { action: 'next', expectedLevel: 0 });
+let side = await call('GET', `/tournaments/${sideId}/full`);
+assert(side.tournament.status === 'running' && side.tournament.clock.levelIndex === 1 && side.tournament.clock.running, 'horloge liée : play et niveau suivant reportés');
+assert(side.linked.length === 1 && side.linked[0].title === 'Main Event', 'horloge liée : lien visible');
+await call('POST', `/tournaments/${sideId}/clock`, { action: 'pause' });
+const main = await call('GET', `/tournaments/${mainId}/full`);
+assert(!main.tournament.clock.running, 'horloge liée : pause depuis l’autre live');
+await call('POST', `/tournaments/${sideId}/unlink`);
+await call('POST', `/tournaments/${sideId}/clock`, { action: 'play' });
+const main2 = await call('GET', `/tournaments/${mainId}/full`);
+side = await call('GET', `/tournaments/${sideId}/full`);
+assert(!main2.tournament.clock.running && main2.tournament.clockGroupId === null && side.tournament.clockGroupId === null, 'séparation : horloges indépendantes');
 console.log('\nTous les tests de fumée sont passés.');

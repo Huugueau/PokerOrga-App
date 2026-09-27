@@ -59,6 +59,8 @@ export const tournaments = pgTable(
     clock: jsonb('clock').$type<ClockState>().notNull(),
     mystery: jsonb('mystery').$type<MysteryState>().notNull(),
     pendingMoves: jsonb('pending_moves').$type<Move[]>().notNull().default([]),
+    /** Tournois partageant le même timer et la même structure. */
+    clockGroupId: uuid('clock_group_id'),
     publicToken: text('public_token').notNull().unique(),
     version: integer('version').notNull().default(1),
     exportedChampionshipIds: jsonb('exported_championship_ids').$type<string[]>().notNull().default([]),

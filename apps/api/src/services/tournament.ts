@@ -14,6 +14,8 @@ import {
   generateEnvelopes,
   initialClock,
   resolveClock,
+  type ClockState,
+  type Level,
   type Move,
   type Player,
   type TableRow,
@@ -47,6 +49,7 @@ export function toTournament(r: TournamentRow): Tournament {
     publicToken: r.publicToken,
     version: r.version,
     pendingMoves: r.pendingMoves ?? [],
+    clockGroupId: r.clockGroupId ?? null,
     startedAt: iso(r.startedAt),
     finishedAt: iso(r.finishedAt),
     exportedChampionshipIds: r.exportedChampionshipIds ?? [],
@@ -90,8 +93,12 @@ export function baseBounty(s: TournamentSettings): number {
   return s.bounty.type === 'fixed' || s.bounty.type === 'progressive' ? s.bounty.amount : 0;
 }
 
-export async function createTournament(ownerId: string, init: Partial<{ title: string; settings: TournamentSettings }> = {}, tx: Tx | typeof db = db) {
-  const structure = defaultStructure();
+export async function createTournament(
+  ownerId: string,
+  init: Partial<{ title: string; settings: TournamentSettings; structure: Level[]; clock: ClockState; clockGroupId: string }> = {},
+  tx: Tx | typeof db = db,
+) {
+  const structure = init.structure ?? defaultStructure();
   const [row] = await tx
     .insert(tournaments)
     .values({
@@ -101,9 +108,10 @@ export async function createTournament(ownerId: string, init: Partial<{ title: s
       structure,
       payouts: DEFAULT_PAYOUTS,
       theme: DEFAULT_THEME,
-      clock: initialClock(structure),
+      clock: init.clock ?? initialClock(structure),
       mystery: DEFAULT_MYSTERY,
       publicToken: publicToken(),
+      clockGroupId: init.clockGroupId ?? null,
     })
     .returning();
   return row;
@@ -164,7 +172,22 @@ export async function buildSnapshot(row: TournamentRow, now = Date.now()): Promi
     computedPayouts,
     lateRegOpen: info.lateRegOpen,
     serverTime: now,
+    linked: await linkedLives(row),
   };
+}
+
+export async function linkedLives(row: TournamentRow) {
+  if (!row.clockGroupId) return [];
+  const others = await db
+    .select({ id: tournaments.id, title: tournaments.title })
+    .from(tournaments)
+    .where(and(eq(tournaments.clockGroupId, row.clockGroupId), ne(tournaments.id, row.id), ne(tournaments.status, 'finished')));
+  const out = [];
+  for (const o of others) {
+    const ps = await db.select({ status: players.status }).from(players).where(eq(players.tournamentId, o.id));
+    out.push({ ...o, activePlayers: ps.filter((p) => p.status === 'active').length });
+  }
+  return out;
 }
 
 export async function getOwned(id: string, ownerId: string): Promise<TournamentRow> {
@@ -196,6 +219,7 @@ export async function mutateTournament<T>(
   opts: { allowFinished?: boolean } = {},
 ): Promise<T> {
   let version = 0;
+  let linked: { id: string; version: number }[] = [];
   const result = await db.transaction(async (tx) => {
     const [row] = await tx.execute<{ id: string }>(sql`select id from tournaments where id = ${id} and owner_id = ${ownerId} for update`).then((r) => r.rows);
     if (!row) throw notFound('Tournoi introuvable.');
@@ -208,10 +232,32 @@ export async function mutateTournament<T>(
       .update(tournaments)
       .set({ ...ctx.patch, version, updatedAt: new Date() })
       .where(eq(tournaments.id, id));
+    linked = await syncLinkedClock(tx, full, ctx.patch);
     return res;
   });
   publishTournament(id, version);
+  for (const l of linked) publishTournament(l.id, l.version);
   return result;
+}
+
+/** Reporte horloge, structure et démarrage sur les lives liés (même timer). */
+async function syncLinkedClock(tx: Tx, full: TournamentRow, patch: MutationCtx['patch']) {
+  const groupId = patch.clockGroupId === undefined ? full.clockGroupId : patch.clockGroupId;
+  if (!groupId || (patch.clock === undefined && patch.structure === undefined && patch.status !== 'running')) return [];
+  const set: Partial<typeof tournaments.$inferInsert> = { updatedAt: new Date(), version: sql`${tournaments.version} + 1` as unknown as number };
+  if (patch.clock !== undefined) set.clock = patch.clock;
+  if (patch.structure !== undefined) set.structure = patch.structure;
+  const rows = await tx
+    .update(tournaments)
+    .set(set)
+    .where(and(eq(tournaments.clockGroupId, groupId), ne(tournaments.id, full.id), ne(tournaments.status, 'finished')))
+    .returning({ id: tournaments.id, version: tournaments.version, status: tournaments.status });
+  if (patch.status === 'running') {
+    for (const r of rows.filter((x) => x.status === 'prepared')) {
+      await tx.update(tournaments).set({ status: 'running', startedAt: patch.startedAt ?? new Date() }).where(eq(tournaments.id, r.id));
+    }
+  }
+  return rows.map((r) => ({ id: r.id, version: r.version }));
 }
 
 export async function loadPlayers(tx: Tx, tournamentId: string) {
